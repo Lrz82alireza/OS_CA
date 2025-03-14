@@ -30,19 +30,46 @@ public:
         tcp_sock = create_socket(false, false);
         connect_socket(tcp_sock, server_ip, port);
 
+        // 🔹 دریافت پورت جدید از سرور
+        char buffer[10];  // برای ذخیره پورت جدید
+        int len = recv(tcp_sock, buffer, sizeof(buffer) - 1, 0);
+        if (len <= 0) {
+            my_print("Failed to receive new port.\n");
+            close(tcp_sock);
+            return;
+        }
+        buffer[len] = '\0';  // اضافه کردن null terminator
+        int new_port = atoi(buffer);  // تبدیل به عدد صحیح
+
+        my_print("New assigned port: ");
+        my_print(buffer);
+        my_print("\n");
+
+        // 🔹 بستن اتصال اولیه
+        close(tcp_sock);
+        
+        // 🔹 اتصال به پورت جدید
+        tcp_sock = create_socket(false, false);
+        connect_socket(tcp_sock, server_ip, new_port);
+
+        // 🔹 ارسال اطلاعات کاربر به سرور
+        Client_info client_info;
+        strncpy(client_info.username, username, sizeof(client_info.username) - 1);
+        strncpy(client_info.role, role, sizeof(client_info.role) - 1);
+        send(tcp_sock, &client_info, sizeof(client_info), 0);
+
+
         // ایجاد سوکت udp
         udp_sock = create_socket(true, false);
         bind_socket(udp_sock, UDP_PORT, false);
-        // if (listen(udp_sock, 5) < 0) {
-        //     my_print("listen failed\n");
-        //     exit(EXIT_FAILURE);
-        // }
 
         my_print("Connected to server as ");
         my_print(username);
         my_print(" (");
         my_print(role);
-        my_print(")\n");
+        my_print(") on new port ");
+        my_print(std::to_string(new_port).c_str());
+        my_print("\n");
 
         startClient();
         

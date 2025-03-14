@@ -86,6 +86,7 @@ void connect_socket(int sock_fd, const char* server_ip, int port) {
     }
 
     if (connect(sock_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+        my_print("Debbugging \n");
         perror("Connect failed");
         close(sock_fd);
         exit(EXIT_FAILURE);

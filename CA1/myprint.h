@@ -6,6 +6,13 @@
 #include <string>
 #include <sstream>
 
+struct Client_info {
+    char username[50];
+    char role[20];
+    int port;
+    int client_fd;
+};
+
 void my_print(const char* str);
 std::string to_string(int value);
 std::string to_string(double value);
