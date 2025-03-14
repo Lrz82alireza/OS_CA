@@ -35,9 +35,16 @@ client: client.cpp $(LIB)
 run: all
 	@tmux has-session -t mysession 2>/dev/null && tmux kill-session -t mysession || true
 	@tmux new-session -d -s mysession 'bash -c "./server 8080"'
-	@sleep 1  # اضافه کردن تاخیر برای اطمینان از اجرای سرور
-	@tmux split-window -h -t mysession
-	@tmux send-keys -t mysession:0.1 'bash -c "./client ali 8080 code"' C-m
+	@sleep 1
+
+	@tmux split-window -h -t mysession:0
+	@tmux split-window -v -t mysession:0.0
+	@tmux split-window -v -t mysession:0.1
+
+	@tmux send-keys -t mysession:0.0 'bash -c "./server 8080"' C-m
+	@tmux send-keys -t mysession:0.1 'bash -c "./client Mir 8080 code"' C-m
+	@tmux send-keys -t mysession:0.2 'bash -c "./client Hashem 8080 code"' C-m
+	@tmux send-keys -t mysession:0.3 'bash -c "./client Abbookh 8080 code"' C-m
 	@tmux attach-session -t mysession
 
 # تمیز کردن فایل‌های موقت
