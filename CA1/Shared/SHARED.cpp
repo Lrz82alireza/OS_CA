@@ -1,5 +1,5 @@
-// myprint.cpp
-#include "myprint.h"
+// SHARED.cpp
+#include "SHARED.h"
 #include <unistd.h>
 #include <sstream>
 #include <string.h>
@@ -12,7 +12,7 @@
 #include <sys/socket.h>
 
 
-// پیاده‌سازی تابع myprint
+// پیاده‌سازی تابع print
 void my_print(const char* str) {
     write(STDOUT_FILENO, str, strlen(str));
 }

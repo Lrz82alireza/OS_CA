@@ -1,7 +1,7 @@
-// myprint.h
+// SHARED.h
 
-#ifndef MYPRINT_H
-#define MYPRINT_H
+#ifndef SHARED_H
+#define SHARED_H
 
 #include <string>
 #include <sstream>
@@ -22,4 +22,4 @@ int create_socket(bool is_udp, bool is_broadcast);
 void bind_socket(int sock_fd, int port, bool is_udp);
 void connect_socket(int sock_fd, const char* ip, int port);
 
-#endif // MYPRINT_H
+#endif // SHARED_H

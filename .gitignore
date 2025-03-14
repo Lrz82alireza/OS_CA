@@ -1,7 +1,7 @@
 # Ignore compiled binaries
 server
 client
-myprint.o
+SHARED.o
 
 # Ignore object files
 *.o

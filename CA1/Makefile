@@ -1,52 +1,43 @@
-# کامپایلر و فلگ‌ها
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall
+CXXFLAGS = -std=c++11 -Wall -IShared
 
-# نام فایل‌های اجرایی
-TARGETS = server client
+SRC_SERVER = $(wildcard Server/*.cpp Shared/*.cpp)
+SRC_CLIENT = $(wildcard Client/*.cpp Shared/*.cpp)
 
-# نام کتابخانه
-LIB = libmyprint.a
+OBJ_SERVER = $(SRC_SERVER:.cpp=.o)
+OBJ_CLIENT = $(SRC_CLIENT:.cpp=.o)
 
-# فایل‌های منبع کتابخانه
-LIB_SRC = myprint.cpp
-LIB_OBJ = myprint.o
+BIN_SERVER = Server/server.out
+BIN_CLIENT = Client/client.out
 
-# هدف اصلی
-all: $(LIB) $(TARGETS)
+all: $(BIN_SERVER) $(BIN_CLIENT)
 
-# ساخت کتابخانه استاتیک
-$(LIB): $(LIB_OBJ)
-	ar rcs $(LIB) $(LIB_OBJ)
+$(BIN_SERVER): $(OBJ_SERVER)
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# کامپایل کد کتابخانه
-$(LIB_OBJ): $(LIB_SRC) myprint.h
-	$(CXX) $(CXXFLAGS) -c $(LIB_SRC) -o $(LIB_OBJ)
+$(BIN_CLIENT): $(OBJ_CLIENT)
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# کامپایل سرور با لینک به کتابخانه
-server: server.cpp $(LIB)
-	$(CXX) $(CXXFLAGS) -o server server.cpp -L. -lmyprint
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# کامپایل کلاینت با لینک به کتابخانه
-client: client.cpp $(LIB)
-	$(CXX) $(CXXFLAGS) -o client client.cpp -L. -lmyprint
+clean:
+	rm -f $(OBJ_SERVER) $(OBJ_CLIENT) $(BIN_SERVER) $(BIN_CLIENT)
 
 # اجرای کلاینت و سرور در tmux
 run: all
-	@tmux has-session -t mysession 2>/dev/null && tmux kill-session -t mysession || true
-	@tmux new-session -d -s mysession 'bash -c "./server 8080"'
+	@if tmux has-session -t mysession 2>/dev/null; then tmux kill-session -t mysession; fi
+	@tmux new-session -d -s mysession 'bash -c "./Server/server.out 8080"'
 	@sleep 1
 
 	@tmux split-window -h -t mysession:0
 	@tmux split-window -v -t mysession:0.0
 	@tmux split-window -v -t mysession:0.1
 
-	@tmux send-keys -t mysession:0.0 'bash -c "./server 8080"' C-m
-	@tmux send-keys -t mysession:0.1 'bash -c "./client Mir 8080 code"' C-m
-	@tmux send-keys -t mysession:0.2 'bash -c "./client Hashem 8080 code"' C-m
-	@tmux send-keys -t mysession:0.3 'bash -c "./client Abbookh 8080 code"' C-m
+	@tmux send-keys -t mysession:0.0 'bash -c "./Server/server.out 8080"' C-m
+	@tmux send-keys -t mysession:0.1 'bash -c "./Client/client.out Mir 8080 code"' C-m
+	@tmux send-keys -t mysession:0.2 'bash -c "./Client/client.out Hashem 8080 code"' C-m
+	@tmux send-keys -t mysession:0.3 'bash -c "./Client/client.out Abbookh 8080 code"' C-m
+
 	@tmux attach-session -t mysession
 
-# تمیز کردن فایل‌های موقت
-clean:
-	rm -f $(TARGETS) $(LIB) $(LIB_OBJ)
