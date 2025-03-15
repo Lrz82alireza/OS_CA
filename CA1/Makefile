@@ -26,18 +26,21 @@ clean:
 
 # اجرای کلاینت و سرور در tmux
 run: all
-	@if tmux has-session -t mysession 2>/dev/null; then tmux kill-session -t mysession; fi
-	@tmux new-session -d -s mysession 'bash -c "./Server/server.out 8080"'
-	@sleep 1
+	@if tmux ls 2>/dev/null | grep -q "mysession"; then \
+		tmux kill-session -t mysession; \
+	fi
+	@tmux new-session -d -s mysession
+
+
+	@tmux send-keys -t mysession:0.0 'bash -c "./Server/server.out 8080"' C-m
 
 	@tmux split-window -h -t mysession:0
 	@tmux split-window -v -t mysession:0.0
 	@tmux split-window -v -t mysession:0.1
 
-	@tmux send-keys -t mysession:0.0 'bash -c "./Server/server.out 8080"' C-m
-	@tmux send-keys -t mysession:0.1 'bash -c "./Client/client.out Mir 8080 code"' C-m
-	@tmux send-keys -t mysession:0.2 'bash -c "./Client/client.out Hashem 8080 code"' C-m
-	@tmux send-keys -t mysession:0.3 'bash -c "./Client/client.out Abbookh 8080 code"' C-m
+	@tmux send-keys -t mysession:0.1 'bash -c "./Client/client.out Mir 8080 coder"' C-m
+	@tmux send-keys -t mysession:0.2 'bash -c "./Client/client.out Hashem 8080 coder"' C-m
+	@tmux send-keys -t mysession:0.3 'bash -c "./Client/client.out Abbookh 8080 coder"' C-m
 
 	@tmux attach-session -t mysession
 

@@ -9,6 +9,12 @@
 
 #define UDP_PORT 8081
 
+#define ROLE_CODER_STR "coder"
+#define ROLE_NAVIGATOR_STR "navigator"
+
+#define ERR_USERNAME_STR "ERR: Username already exists."
+#define ERR_ROLE_STR "ERR: Invalid role."
+
 
 class Server {
 private:
@@ -50,9 +56,6 @@ private:
         char port_msg[10];
         sprintf(port_msg, "%d", new_port);
         send(client_fd, port_msg, strlen(port_msg), 0);
-        my_print("Assigned new port ->: ");
-        my_print(port_msg);
-        my_print("\n");
     }
 
     // تابع برای بستن اتصال اولیه با کلاینت
@@ -79,6 +82,47 @@ private:
             return false;  // خطا در دریافت اطلاعات یا اتصال قطع شده است
         }
         return true;
+    }
+
+// _____________ Check Client Info _____________
+
+    int HasUniqueUsername(Client_info new_client) {
+        for (int i = 0; i < clients.size(); i++) {
+            if (strcmp(clients[i].username, new_client.username) == 0) {
+                return -1;
+            }
+        }
+        return 1;
+    }
+
+    int HasValidRole(Client_info new_client) {
+        if (strcmp(new_client.role, ROLE_CODER_STR) == 0) {
+            return 1;
+        }
+        if (strcmp(new_client.role, ROLE_NAVIGATOR_STR) == 0) {
+            return 1;
+        }
+        return -1;
+    }
+
+    int checkClientInfo(Client_info new_client) {
+        if (HasUniqueUsername(new_client) == -1) {
+            send(new_client.client_fd, ERR_USERNAME_STR, strlen(ERR_USERNAME_STR), 0);
+            return -1;
+        }
+        if (HasValidRole(new_client) == -1) {
+            send(new_client.client_fd, ERR_ROLE_STR, strlen(ERR_ROLE_STR), 0);
+            return -1;
+        }
+        return 1;
+    }
+// _____________ Check Client Info _____________
+    int addNewClient(Client_info new_client) {
+        if (checkClientInfo(new_client) == -1) {
+            return -1;
+        }
+        clients.push_back(new_client);
+        return clients.size();
     }
 
     // تابع اصلی برای مدیریت کلاینت جدید
@@ -112,11 +156,14 @@ private:
             closeClientConnection(new_client_fd);
             return;
         }
-
-        // اضافه کردن کلاینت به لیست
         new_client.port = new_port;
         new_client.client_fd = new_client_fd;
-        clients.push_back(new_client);
+
+        if (addNewClient(new_client) == -1) {
+            send(new_client.client_fd, "ERR: Invalid information", 25, 0);
+            closeClientConnection(new_client.client_fd);
+            return;
+        }
 
         // چاپ اطلاعات کلاینت جدید
         my_print("New client connected: ");

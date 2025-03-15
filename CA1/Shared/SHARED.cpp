@@ -17,22 +17,25 @@ void my_print(const char* str) {
     write(STDOUT_FILENO, str, strlen(str));
 }
 
-// تابع to_string برای تبدیل int به رشته
+// تبدیل عدد صحیح به رشته
 std::string to_string(int value) {
-    std::ostringstream oss;
-    oss << value;
-    return oss.str();
+    char buffer[12]; // فضای کافی برای نمایش عدد صحیح (حداکثر 11 رقم + null)
+    sprintf(buffer, "%d", value);
+    return std::string(buffer);
 }
 
-// تابع to_string برای تبدیل double به رشته
+// تبدیل عدد اعشاری به رشته
 std::string to_string(double value) {
-    std::ostringstream oss;
-    oss << value;
-    return oss.str();
+    char buffer[32]; // فضای کافی برای نمایش عدد اعشاری
+    sprintf(buffer, "%.6f", value); // نمایش تا 6 رقم اعشار
+    return std::string(buffer);
 }
 
-// تابع to_string برای تبدیل const char* به رشته
+// تبدیل const char* به رشته
 std::string to_string(const char* value) {
+    if (value == nullptr) {
+        return std::string(""); // جلوگیری از کرش در صورت nullptr
+    }
     return std::string(value);
 }
 

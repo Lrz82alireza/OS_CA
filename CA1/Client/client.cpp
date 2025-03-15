@@ -102,9 +102,7 @@ public:
         sendUserInfo(tcp_sock, username, role);
         
         // ایجاد و تنظیم سوکت UDP
-        my_print("Debugging: \n");
         udp_sock = setupUdpSocket(UDP_PORT);
-        my_print("Debugging: \n");
 
         my_print("Connected to server as ");
         my_print(username);
