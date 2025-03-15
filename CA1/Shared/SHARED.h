@@ -11,7 +11,23 @@ struct Client_info {
     char role[20];
     int port;
     int client_fd;
+    bool has_teammate = false;
 };
+
+struct State
+{
+    // todo
+};
+
+struct Team
+{
+    Client_info* coder = nullptr;
+    Client_info* navigator = nullptr;
+    int score[3] = {0, 0, 0};
+    State *state = nullptr;
+};
+
+
 
 void my_print(const char* str);
 std::string to_string(int value);

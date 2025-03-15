@@ -83,14 +83,13 @@ void connect_socket(int sock_fd, const char* server_ip, int port) {
     server_addr.sin_port = htons(port);
 
     if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) <= 0) {
-        perror("Invalid address");
+        my_print("Invalid address");
         close(sock_fd);
         exit(EXIT_FAILURE);
     }
 
     if (connect(sock_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        my_print("Debbugging \n");
-        perror("Connect failed");
+        my_print("Connecting failed \n");
         close(sock_fd);
         exit(EXIT_FAILURE);
     }

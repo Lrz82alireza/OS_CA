@@ -15,6 +15,7 @@
 #define ERR_USERNAME_STR "ERR: Username already exists."
 #define ERR_ROLE_STR "ERR: Invalid role."
 
+#define START_STR "start"
 
 class Server {
 private:
@@ -24,7 +25,10 @@ private:
     int udp_socket;
     int udp_port = UDP_PORT;
 
-    std::vector<Client_info> clients;
+    int start_flag = -1;
+
+    std::vector<Client_info*> clients;
+    std::vector<Team*> teams;
     
     // تابع برای دریافت پورت اختصاص داده‌شده به کلاینت
     int getAssignedPort(int client_fd) {
@@ -88,7 +92,7 @@ private:
 
     int HasUniqueUsername(Client_info new_client) {
         for (int i = 0; i < clients.size(); i++) {
-            if (strcmp(clients[i].username, new_client.username) == 0) {
+            if (strcmp(clients[i]->username, new_client.username) == 0) {
                 return -1;
             }
         }
@@ -121,7 +125,9 @@ private:
         if (checkClientInfo(new_client) == -1) {
             return -1;
         }
-        clients.push_back(new_client);
+        new_client.has_teammate = false;
+        Client_info * ptr = new Client_info(new_client);
+        clients.push_back(ptr);
         return clients.size();
     }
 
@@ -208,8 +214,8 @@ public:
         FD_SET(udp_socket, &read_fds);
         max_fd = std::max(server_fd, udp_socket);
         for (const auto& client : clients) {
-            FD_SET(client.client_fd, &read_fds);
-            if (client.client_fd > max_fd) max_fd = client.client_fd;
+            FD_SET(client->client_fd, &read_fds);
+            if (client->client_fd > max_fd) max_fd = client->client_fd;
         }
     }
     
@@ -222,16 +228,21 @@ public:
     void handleClientMessages(fd_set& read_fds, struct sockaddr_in& broadcast_addr) {
         char buffer[1024];
         for (auto it = clients.begin(); it != clients.end(); ) {
-            if (FD_ISSET(it->client_fd, &read_fds)) {
-                int len = recv(it->client_fd, buffer, sizeof(buffer) - 1, 0);
+            Client_info *client = *it;
+
+
+            if (FD_ISSET(client->client_fd, &read_fds)) {
+                int len = recv(client->client_fd, buffer, sizeof(buffer) - 1, 0);
                 if (len > 0) {
                     buffer[len] = '\0';
-                    my_print("[TCP] Client: ");
+                    my_print("[TCP] Client ");
+                    my_print(client->username);
+                    my_print(": ");
                     my_print(buffer);
                     my_print("\n");
                 
                     // پاسخ به همان کلاینت
-                    send(it->client_fd, "Received your message", 21, 0);
+                    send(client->client_fd, "Received your message", 21, 0);
                 
                     // Broadcast پیام از طریق UDP
                     strcpy(buffer, "Hello to all clients!");
@@ -241,7 +252,7 @@ public:
                     ++it;
                 } else {
                     my_print("Client disconnected.\n");
-                    close(it->client_fd);
+                    close(client->client_fd);
                     it = clients.erase(it);
                 }
             } else {
@@ -258,6 +269,70 @@ public:
         }
     }
     
+    void handleKeyboardInput(fd_set& read_fds) {
+        char buffer[1024];  
+        int len = 0;
+    
+        if (FD_ISSET(STDIN_FILENO, &read_fds)) {
+            len = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
+            if (len > 0) {
+                buffer[len] = '\0';  
+                my_print("Received input from keyboard: ");
+                my_print(buffer);
+                my_print("\n");
+    
+                if (strcmp(buffer, START_STR) == 0) {
+                    start_flag = 1;
+                    return;
+                }
+                // if (strcmp(buffer, "exit\n") == 0) {
+                //     my_print("Exiting...\n");
+                //     exit(EXIT_SUCCESS);
+                // }
+                if (strcmp(buffer, "team\n") == 0)
+                {
+                    int count = 0;
+                    for (auto team : teams) {
+                        my_print("Team ");
+                        my_print(to_string(count).c_str());
+                        my_print(": ");
+                        my_print(team->coder->username);
+                        my_print(" - ");
+                        my_print(team->navigator->username);
+                        count++;
+                    }
+                }
+                
+            }
+        }
+    }    
+
+    int matchPairTeam() {
+        for (int i = 0; i < clients.size(); i++) {
+            if (clients[i]->has_teammate)
+                continue;
+            for (int j = i + 1; j < clients.size(); j++) {
+                if (clients[j]->has_teammate)
+                    continue;
+                if (strcmp(clients[i]->role, clients[j]->role) != 0) {
+                    Team *team = new Team();
+                    if (strcmp(clients[i]->role, ROLE_CODER_STR) == 0) {
+                        team->coder = clients[i];
+                        team->navigator = clients[j];
+                    } else {
+                        team->coder = clients[j];
+                        team->navigator = clients[i];
+                    }
+
+                    clients[i]->has_teammate = true;
+                    clients[j]->has_teammate = true;
+                    teams.push_back(team);
+                    break;
+                }
+            }
+        }
+    }
+
     // ───────────── تابع اصلی startServer ─────────────
     
     void startServer() {
@@ -279,13 +354,17 @@ public:
                 break;
             }
         
-            handleNewConnections(read_fds);
+            if (start_flag == -1) {
+                handleNewConnections(read_fds);
+                matchPairTeam();
+            }
             handleClientMessages(read_fds, broadcast_addr);
             handleUdpBroadcast(read_fds, broadcast_addr);
+            handleKeyboardInput(read_fds);
         }
     
         for (auto& client : clients) {
-            close(client.client_fd);
+            close(client->client_fd);
         }
         close(udp_socket);
     }
