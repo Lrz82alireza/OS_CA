@@ -270,28 +270,23 @@ public:
     }
     
     void handleKeyboardInput(fd_set& read_fds) {
-        char buffer[1024];  
+        char buffer[1024];
         int len = 0;
     
+        // بررسی ورودی از کیبورد
         if (FD_ISSET(STDIN_FILENO, &read_fds)) {
             len = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
             if (len > 0) {
-                buffer[len] = '\0';  
-                my_print("Received input from keyboard: ");
-                my_print(buffer);
-                my_print("\n");
-    
+                buffer[len] = '\0';  // پایان رشته
+
+                // پردازش ورودی
                 if (strcmp(buffer, START_STR) == 0) {
                     start_flag = 1;
                     return;
                 }
-                // if (strcmp(buffer, "exit\n") == 0) {
-                //     my_print("Exiting...\n");
-                //     exit(EXIT_SUCCESS);
-                // }
-                if (strcmp(buffer, "team\n") == 0)
-                {
+                if (strcmp(buffer, "team\n") == 0) {
                     int count = 0;
+                    my_print("Teams: \n");
                     for (auto team : teams) {
                         my_print("Team ");
                         my_print(to_string(count).c_str());
@@ -299,59 +294,54 @@ public:
                         my_print(team->coder->username);
                         my_print(" - ");
                         my_print(team->navigator->username);
+                        my_print("\n");
                         count++;
                     }
                 }
-                
+                if (strcmp(buffer, "clients\n") == 0) {
+                    my_print("Clients: \n");
+                    for (auto client : clients) {
+                        my_print(client->username);
+                        my_print(" (");
+                        my_print(client->role);
+                        my_print(")\n");
+                    }
+                }
             }
         }
-    }    
+    }
 
-    int matchPairTeam() {
-        for (auto i = 0; i < clients.size(); i++) {
-            if (clients[i]->has_teammate) {
+    void pairUpClients() {
+        for (auto client : clients) {            
+            if (client->has_teammate) {
                 continue;
             }
-            for (auto j = i; j < clients.size(); j++) {
-                if (clients[j] == nullptr || clients[j]->has_teammate) {
+            for (auto other : clients) {
+                if (other->has_teammate) {
                     continue;
                 }
-   
-                if (strcmp(clients[i]->role, clients[j]->role) != 0) {
-                    Team *team = new Team();
-                    my_print("Client ");
-                    my_print(clients[j]->username);
-                    my_print(" has a teammate\n");
-                    my_print(clients[j]->role);
-                    my_print("\n");
-                    if (clients[i]->role == ROLE_CODER_STR) {
-                        my_print("Client ");
-                        my_print(clients[j]->username);
-                        my_print(" has a teammate\n");
-                        my_print(clients[j]->role);
-                        my_print("\n");
-                        team->coder = clients[i];
-                        team->navigator = clients[j];
-                    } else {
-                        my_print("Else ");
-                        my_print(clients[j]->username);
-                        my_print(" has a teammate\n");
-                        my_print(clients[j]->role);
-                        my_print("\n");
-                        team->coder = clients[j];
-                        team->navigator = clients[i];
-                    }
-                    my_print("Client ");
-                    my_print(clients[j]->username);
-                    my_print(" has a teammate\n");
-                    my_print(clients[j]->role);
-                    my_print("\n");
-                    
-                    clients[i]->has_teammate = true;
-                    clients[j]->has_teammate = true;
-                    teams.push_back(team);
-                    break;
+                if (other->role == client->role) {
+                    continue;
                 }
+
+                Team *team = new Team();
+                if (client->role == ROLE_CODER_STR) {
+                    team->coder = client;
+                    team->navigator = other;
+                } else {
+                    team->coder = other;
+                    team->navigator = client;
+                }
+
+                client->has_teammate = true;
+                other->has_teammate = true;
+
+                my_print("Team created: ");
+                my_print(team->coder->username);
+                my_print(" - ");
+                my_print(team->navigator->username);
+
+                teams.push_back(team);
             }
         }
     }
@@ -370,18 +360,24 @@ public:
     
         while (true) {
             prepareFdSetForServer(read_fds, max_fd);
-        
+    
+            // اضافه کردن STDIN_FILENO به مجموعه فایل‌ها
+            FD_SET(STDIN_FILENO, &read_fds);
+            max_fd = std::max(max_fd, STDIN_FILENO);  // به‌روزرسانی max_fd با STDIN_FILENO
+    
             int activity = select(max_fd + 1, &read_fds, NULL, NULL, NULL);
             if (activity < 0) {
-                perror("select() failed");
+                my_print("select() failed");
                 break;
             }
-        
-            handleKeyboardInput(read_fds);
+    
+            handleKeyboardInput(read_fds);  // پردازش ورودی از کیبورد
+    
             if (start_flag == -1) {
                 handleNewConnections(read_fds);
-                matchPairTeam();
+                pairUpClients();
             }
+    
             handleClientMessages(read_fds, broadcast_addr);
             handleUdpBroadcast(read_fds, broadcast_addr);
         }

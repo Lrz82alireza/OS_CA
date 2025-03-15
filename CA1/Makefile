@@ -38,7 +38,7 @@ run: all
 	@tmux split-window -v -t mysession:0.1
 
 	@tmux send-keys -t mysession:0.1 'bash -c "./Client/client.out Mir 8080 coder"' C-m
-	@tmux send-keys -t mysession:0.2 'bash -c "./Client/client.out Hashem 8080 coder"' C-m
+	@tmux send-keys -t mysession:0.2 'bash -c "./Client/client.out Hashem 8080 navigator"' C-m
 	@tmux send-keys -t mysession:0.3 'bash -c "./Client/client.out Abbookh 8080 coder"' C-m
 
 	@tmux attach-session -t mysession

@@ -43,7 +43,7 @@ std::string to_string(const char* value) {
 int create_socket(bool is_udp, bool is_broadcast) {
     int sock_fd = socket(AF_INET, (is_udp ? SOCK_DGRAM : SOCK_STREAM), 0);
     if (sock_fd < 0) {
-        perror("Socket creation failed");
+        my_print("Socket creation failed");
         exit(EXIT_FAILURE);
     }
 
