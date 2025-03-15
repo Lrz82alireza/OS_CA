@@ -30,17 +30,24 @@ run: all
 		tmux kill-session -t mysession; \
 	fi
 	@tmux new-session -d -s mysession
+
+	# تقسیم صفحه به دو نیمه: چپ (سرور) و راست (کلاینت‌ها)
+	@tmux split-window -h -t mysession:0
 	@tmux send-keys -t mysession:0.0 'bash -c "./Server/server.out 8080 || echo Server failed"' C-m
 	@sleep 5
 
-	@tmux split-window -h -t mysession:0
-	@tmux split-window -v -t mysession:0.0
+	# تقسیم سمت راست (پنجره 0.1) به چهار قسمت عمودی
 	@tmux split-window -v -t mysession:0.1
+	@tmux split-window -v -t mysession:0.2
+	@tmux split-window -v -t mysession:0.3
 
+	# اجرای کلاینت‌ها در پنجره‌های جداگانه سمت راست
 	@tmux send-keys -t mysession:0.1 'bash -c "./Client/client.out Mir 8080 coder"' C-m
 	@tmux send-keys -t mysession:0.2 'bash -c "./Client/client.out Hashem 8080 navigator"' C-m
 	@tmux send-keys -t mysession:0.3 'bash -c "./Client/client.out Abbookh 8080 coder"' C-m
+	@tmux send-keys -t mysession:0.4 'bash -c "./Client/client.out Shoosh 8080 navigator"' C-m
 
 	@tmux attach-session -t mysession
+
 
 

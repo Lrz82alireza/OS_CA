@@ -5,6 +5,12 @@
 
 #include <string>
 #include <sstream>
+#include <cstdlib>
+#include <cstring>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <vector>
+#include <algorithm>
 
 struct Client_info {
     char username[50];

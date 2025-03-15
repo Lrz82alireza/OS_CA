@@ -20,6 +20,8 @@
 
 class Server {
 private:
+    struct sockaddr_in broadcast_addr;
+
     int server_fd;
     int stp_port;
     
@@ -228,7 +230,7 @@ public:
         }
     }
     
-    void handleClientMessages(fd_set& read_fds, struct sockaddr_in& broadcast_addr) {
+    void handleClientMessages(fd_set& read_fds) {
         char buffer[1024];
         for (auto it = clients.begin(); it != clients.end(); ) {
             Client_info *client = *it;
@@ -264,7 +266,7 @@ public:
         }
     }
     
-    void handleUdpBroadcast(fd_set& read_fds, struct sockaddr_in& broadcast_addr) {
+    void handleUdpBroadcast(fd_set& read_fds) {
         if (FD_ISSET(udp_socket, &read_fds)) {
             char buffer[1024] = "Hello to all clients!";
             sendto(udp_socket, buffer, strlen(buffer), 0,
@@ -272,6 +274,14 @@ public:
         }
     }
     
+    void startGame() {
+        if (start_flag == -1) {
+            start_flag = 1;
+            gameManager = new GameManager(&broadcast_addr, &server_fd, &stp_port, &udp_socket, &udp_port, clients, teams);
+            my_print("Game started.\n");
+        }
+    }
+
     void handleKeyboardInput(fd_set& read_fds) {
         char buffer[1024];
         int len = 0;
@@ -283,10 +293,8 @@ public:
                 buffer[len] = '\0';
 
                 // پردازش ورودی
-                if (strcmp(buffer, START_STR) == 0) {
-                    start_flag = 1;
-                    gameManager = new GameManager(&server_fd, &stp_port, &udp_socket, &udp_port, clients, teams);
-                    my_print("Game started.\n");
+                if (strcmp(buffer, "start\n") == 0) {
+                    startGame();
                     return;
                 }
                 if (strcmp(buffer, "team\n") == 0) {
@@ -345,32 +353,46 @@ public:
                 my_print(team->coder->username);
                 my_print(" - ");
                 my_print(team->navigator->username);
+                my_print("\n");
 
                 teams.push_back(team);
             }
         }
     }
 
-    void handleGameMessages(fd_set& read_fds) {
+    int handleGameMessege(Client_info *Client, Team *team, fd_set& read_fd) {
+
         char buffer[1024];
-    
-        for (auto it = clients.begin(); it != clients.end(); ) {
-            if (FD_ISSET((*it)->client_fd, &read_fds)) {
-                int len = recv((*it)->client_fd, buffer, sizeof(buffer) - 1, 0);
-                if (len > 0) {
-                    buffer[len] = '\0';
-                    gameManager->handleMessage(*it, buffer);
-                    ++it;
-                } else {
-                    my_print("Client disconnected.\n");
-                    // todo: remove client from teams
-                    close((*it)->client_fd);
-                    it = clients.erase(it);
-                }
+        
+        if (FD_ISSET(Client->client_fd, &read_fd)) {
+            int len = recv(Client->client_fd, buffer, sizeof(buffer) - 1, 0);
+            if (len > 0) {
+                buffer[len] = '\0';
+                gameManager->handleMessage(Client, team, buffer);
             } else {
-                ++it;
+                return -1;
             }
         }
+        return 1;
+    }
+
+    void handleGameMessages(fd_set& read_fds) {
+
+        for (auto team : teams) {
+            if (handleGameMessege(team->coder, team, read_fds) == -1) {
+                // todo: remove client from teams
+                my_print("Client ");
+                my_print(team->coder->username);
+                my_print(" disconnected.\n");
+            }
+            if (handleGameMessege(team->navigator, team, read_fds) == -1) {
+                // todo: remove client from teams
+                my_print("Client ");
+                my_print(team->navigator->username);
+                my_print(" disconnected.\n");
+            }
+        }
+
     }
 
     // ───────────── تابع اصلی startServer ─────────────
@@ -378,8 +400,8 @@ public:
     void startServer() {
         fd_set read_fds;
         int max_fd;
-    
-        struct sockaddr_in broadcast_addr;
+
+        // تنظیمات برای ارسال Broadcast
         memset(&broadcast_addr, 0, sizeof(broadcast_addr));
         broadcast_addr.sin_family = AF_INET;
         broadcast_addr.sin_port = htons(udp_port);
@@ -403,11 +425,11 @@ public:
             if (start_flag == -1) {
                 handleNewConnections(read_fds);
                 pairUpClients();
-                handleClientMessages(read_fds, broadcast_addr);
+                handleClientMessages(read_fds);
             } else {
                 handleGameMessages(read_fds);
             }
-            handleUdpBroadcast(read_fds, broadcast_addr);
+            // handleUdpBroadcast(read_fds);
         }
     
         for (auto& client : clients) {
