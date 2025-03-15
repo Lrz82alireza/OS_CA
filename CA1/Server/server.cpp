@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "SHARED.h"
+#include "GameManager.h"
 
 #define UDP_PORT 8081
 
@@ -30,6 +31,8 @@ private:
     std::vector<Client_info*> clients;
     std::vector<Team*> teams;
     
+    GameManager* gameManager;
+
     // تابع برای دریافت پورت اختصاص داده‌شده به کلاینت
     int getAssignedPort(int client_fd) {
         struct sockaddr_in addr;
@@ -277,11 +280,13 @@ public:
         if (FD_ISSET(STDIN_FILENO, &read_fds)) {
             len = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
             if (len > 0) {
-                buffer[len] = '\0';  // پایان رشته
+                buffer[len] = '\0';
 
                 // پردازش ورودی
                 if (strcmp(buffer, START_STR) == 0) {
                     start_flag = 1;
+                    gameManager = new GameManager(&server_fd, &stp_port, &udp_socket, &udp_port, clients, teams);
+                    my_print("Game started.\n");
                     return;
                 }
                 if (strcmp(buffer, "team\n") == 0) {
@@ -346,6 +351,28 @@ public:
         }
     }
 
+    void handleGameMessages(fd_set& read_fds) {
+        char buffer[1024];
+    
+        for (auto it = clients.begin(); it != clients.end(); ) {
+            if (FD_ISSET((*it)->client_fd, &read_fds)) {
+                int len = recv((*it)->client_fd, buffer, sizeof(buffer) - 1, 0);
+                if (len > 0) {
+                    buffer[len] = '\0';
+                    gameManager->handleMessage(*it, buffer);
+                    ++it;
+                } else {
+                    my_print("Client disconnected.\n");
+                    // todo: remove client from teams
+                    close((*it)->client_fd);
+                    it = clients.erase(it);
+                }
+            } else {
+                ++it;
+            }
+        }
+    }
+
     // ───────────── تابع اصلی startServer ─────────────
     
     void startServer() {
@@ -363,7 +390,7 @@ public:
     
             // اضافه کردن STDIN_FILENO به مجموعه فایل‌ها
             FD_SET(STDIN_FILENO, &read_fds);
-            max_fd = std::max(max_fd, STDIN_FILENO);  // به‌روزرسانی max_fd با STDIN_FILENO
+            max_fd = std::max(max_fd, STDIN_FILENO); 
     
             int activity = select(max_fd + 1, &read_fds, NULL, NULL, NULL);
             if (activity < 0) {
@@ -371,14 +398,15 @@ public:
                 break;
             }
     
-            handleKeyboardInput(read_fds);  // پردازش ورودی از کیبورد
+            handleKeyboardInput(read_fds);
     
             if (start_flag == -1) {
                 handleNewConnections(read_fds);
                 pairUpClients();
+                handleClientMessages(read_fds, broadcast_addr);
+            } else {
+                handleGameMessages(read_fds);
             }
-    
-            handleClientMessages(read_fds, broadcast_addr);
             handleUdpBroadcast(read_fds, broadcast_addr);
         }
     
