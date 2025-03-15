@@ -308,22 +308,45 @@ public:
     }    
 
     int matchPairTeam() {
-        for (int i = 0; i < clients.size(); i++) {
-            if (clients[i]->has_teammate)
+        for (auto i = 0; i < clients.size(); i++) {
+            if (clients[i]->has_teammate) {
                 continue;
-            for (int j = i + 1; j < clients.size(); j++) {
-                if (clients[j]->has_teammate)
+            }
+            for (auto j = i; j < clients.size(); j++) {
+                if (clients[j] == nullptr || clients[j]->has_teammate) {
                     continue;
+                }
+   
                 if (strcmp(clients[i]->role, clients[j]->role) != 0) {
                     Team *team = new Team();
-                    if (strcmp(clients[i]->role, ROLE_CODER_STR) == 0) {
+                    my_print("Client ");
+                    my_print(clients[j]->username);
+                    my_print(" has a teammate\n");
+                    my_print(clients[j]->role);
+                    my_print("\n");
+                    if (clients[i]->role == ROLE_CODER_STR) {
+                        my_print("Client ");
+                        my_print(clients[j]->username);
+                        my_print(" has a teammate\n");
+                        my_print(clients[j]->role);
+                        my_print("\n");
                         team->coder = clients[i];
                         team->navigator = clients[j];
                     } else {
+                        my_print("Else ");
+                        my_print(clients[j]->username);
+                        my_print(" has a teammate\n");
+                        my_print(clients[j]->role);
+                        my_print("\n");
                         team->coder = clients[j];
                         team->navigator = clients[i];
                     }
-
+                    my_print("Client ");
+                    my_print(clients[j]->username);
+                    my_print(" has a teammate\n");
+                    my_print(clients[j]->role);
+                    my_print("\n");
+                    
                     clients[i]->has_teammate = true;
                     clients[j]->has_teammate = true;
                     teams.push_back(team);
@@ -354,13 +377,13 @@ public:
                 break;
             }
         
+            handleKeyboardInput(read_fds);
             if (start_flag == -1) {
                 handleNewConnections(read_fds);
                 matchPairTeam();
             }
             handleClientMessages(read_fds, broadcast_addr);
             handleUdpBroadcast(read_fds, broadcast_addr);
-            handleKeyboardInput(read_fds);
         }
     
         for (auto& client : clients) {

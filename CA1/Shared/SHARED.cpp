@@ -47,6 +47,14 @@ int create_socket(bool is_udp, bool is_broadcast) {
         exit(EXIT_FAILURE);
     }
 
+    // فعال‌سازی SO_REUSEADDR برای امکان استفاده مجدد از پورت
+    int reuseAddr = 1;
+    if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(reuseAddr)) < 0) {
+        perror("Failed to set SO_REUSEADDR");
+        close(sock_fd);
+        exit(EXIT_FAILURE);
+    }
+
     // فعال‌سازی Broadcast در صورت نیاز
     if (is_udp && is_broadcast) {
         int broadcastEnable = 1;
@@ -59,6 +67,7 @@ int create_socket(bool is_udp, bool is_broadcast) {
 
     return sock_fd;
 }
+
 
 // تابع برای Bind کردن سوکت به یک پورت
 void bind_socket(int sock_fd, int port, bool is_broadcast) {
