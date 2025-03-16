@@ -324,6 +324,14 @@ public:
         }
     }
 
+    void pairUpClientsMessage(Client_info *client, Client_info *other) {
+        char buffer[1024];
+        strcpy(buffer, "You are paired with ");
+        strcat(buffer, other->username);
+        strcat(buffer, " as your teammate.");
+        send(client->client_fd, buffer, strlen(buffer), 0);
+    }
+
     void pairUpClients() {
         for (auto client : clients) {            
             if (client->has_teammate) {
@@ -348,6 +356,9 @@ public:
 
                 client->has_teammate = true;
                 other->has_teammate = true;
+
+                pairUpClientsMessage(client, other);
+                pairUpClientsMessage(other, client);
 
                 my_print("Team created: ");
                 my_print(team->coder->username);
@@ -392,7 +403,6 @@ public:
                 my_print(" disconnected.\n");
             }
         }
-
     }
 
     // ───────────── تابع اصلی startServer ─────────────
@@ -420,6 +430,8 @@ public:
                 break;
             }
     
+            // I/O Processing
+            
             handleKeyboardInput(read_fds);
     
             if (start_flag == -1) {

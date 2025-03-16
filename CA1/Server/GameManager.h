@@ -13,7 +13,23 @@
 #define Q2 "def reverse_string(s):\n"
 #define Q3 "def is_palindrome(s):\n"
 
+#define CODE_STR "/code"
+#define CHAT_STR "/chat"
+#define SUBMIT_STR "/submit"
+
+#define CODE_N 1
+#define CHAT_N 2
+#define SUBMIT_N 3
+
+
 const std::string questions[3] = {Q1, Q2, Q3};
+
+struct Message
+{
+    int type;
+    std::string content;
+};
+
 
 class GameManager {
 public:
@@ -43,7 +59,19 @@ private:
 
     void handleMove(int client_fd);
     void handleChat(int client_fd);
+    void handleCoderMessage(Client_info *client, Team *team, Message &message);
+    void handleNavigatorMessage(Client_info *client, Team *team, Message &message);
     void sendQuestion();
+
+    void storeCode(const std::string& code, Team *team);
+    void sendCodeToNavigator(Team *team);
+
+    void submitCode(Team *team, const std::string& code);
+
+    Message decodeMessage(const std::string& message);
+    void sendInvalidMessage(int client_fd);
+
+    
 };
 
 #endif // GAME_MANAGER_H

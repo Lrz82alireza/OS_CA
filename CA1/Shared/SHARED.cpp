@@ -103,3 +103,23 @@ void connect_socket(int sock_fd, const char* server_ip, int port) {
         exit(EXIT_FAILURE);
     }
 }
+
+std::string extractType(const std::string& input) {
+    if (input.empty() || input[0] != '/') return "";
+
+    size_t spacePos = input.find(' ');
+    if (spacePos == std::string::npos) {
+        return input.substr(1);  // اگر فاصله‌ای نبود، کل رشته بعد از `/` رو برگردون
+    }
+    
+    return input.substr(1, spacePos - 1);  // نوع پیام (type) رو استخراج کن
+}
+
+void sendMsgToTeam(Team* team, const std::string& msg) {
+    if (team->coder != nullptr) {
+        send(team->coder->client_fd, msg.c_str(), msg.length(), 0);
+    }
+    if (team->navigator != nullptr) {
+        send(team->navigator->client_fd, msg.c_str(), msg.length(), 0);
+    }
+}
