@@ -22,6 +22,7 @@ void GameManager::handleCoderMessage(Client_info *client, Team *team, Message &m
     
     case CHAT_N:
         // send message to navigator
+        msg.content = "[TCP] Coder: \n" + msg.content;
         send(team->navigator->client_fd, msg.content.c_str(), msg.content.length(), 0);
         break;
 
@@ -38,6 +39,7 @@ void GameManager::handleNavigatorMessage(Client_info *client, Team *team, Messag
     {
     case CHAT_N:
         // send message to coder
+        msg.content = "[TCP] Navigator: \n" + msg.content;
         send(team->coder->client_fd, msg.content.c_str(), msg.content.length(), 0);
         break;
     case SUBMIT_N:
@@ -87,7 +89,9 @@ void GameManager::storeCode(const std::string& code, Team *team) {
 }
 
 void GameManager::sendCodeToNavigator(Team *team) {
-    send(team->navigator->client_fd, team->submission.code, strlen(team->submission.code), 0);
+    std::string msg = "-------Code received-------\n";
+    msg += team->submission.code;
+    send(team->navigator->client_fd, msg.c_str(), msg.length(), 0);
 }
 
 void GameManager::submitCode(Team *team, const std::string& code) {
