@@ -112,7 +112,7 @@ std::string extractType(const std::string& input) {
         return input.substr(1);  // اگر فاصله‌ای نبود، کل رشته بعد از `/` رو برگردون
     }
     
-    return input.substr(1, spacePos - 1);  // نوع پیام (type) رو استخراج کن
+    return input.substr(0, spacePos);  // نوع پیام (type) رو استخراج کن
 }
 
 void sendMsgToTeam(Team* team, const std::string& msg) {

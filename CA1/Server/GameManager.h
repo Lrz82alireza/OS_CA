@@ -66,7 +66,7 @@ private:
     void storeCode(const std::string& code, Team *team);
     void sendCodeToNavigator(Team *team);
 
-    void submitCode(Team *team, const std::string& code);
+    void submitCode(Team *team);
 
     Message decodeMessage(const std::string& message);
     void sendInvalidMessage(int client_fd);

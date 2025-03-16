@@ -44,7 +44,7 @@ void GameManager::handleNavigatorMessage(Client_info *client, Team *team, Messag
         break;
     case SUBMIT_N:
         // submit
-        submitCode(team, msg.content);
+        submitCode(team);
         break;
     default:
         // invalid message
@@ -59,14 +59,17 @@ Message GameManager::decodeMessage(const std::string& message) {
 
     if (type == CODE_STR) {
         msg.type = CODE_N;
-        msg.content = message.substr(type.length() + 1);
     } else if (type == CHAT_STR) {
         msg.type = CHAT_N;
-        msg.content = message.substr(type.length() + 1);
     } else if (type == SUBMIT_STR) {
         msg.type = SUBMIT_N;
-        msg.content = message.substr(type.length() + 1);
+    } else {
+        std::string tmp = "Invalid message type: ";
+        tmp += type;
+        tmp += "\n";
+        my_print(tmp.c_str());
     }
+    msg.content = message.substr(type.length() + 1);
 
     return msg;
 }
@@ -94,13 +97,12 @@ void GameManager::sendCodeToNavigator(Team *team) {
     send(team->navigator->client_fd, msg.c_str(), msg.length(), 0);
 }
 
-void GameManager::submitCode(Team *team, const std::string& code) {
+void GameManager::submitCode(Team *team) {
     if (team->state.submitted[state]) {
         sendMsgToTeam(team, "You have already submitted this question.");
         return;
     }
 
-    strncpy(team->submission.code, code.c_str(), sizeof(team->submission.code) - 1);
     team->state.submitted[state] = true;
 
     std::string team_name = team->coder->username;
@@ -115,6 +117,8 @@ void GameManager::submitCode(Team *team, const std::string& code) {
     std::string submission_msg = "-------Code submitted-------\n";
     submission_msg += "Team: " + team_name + "\n";
     submission_msg += "Problem: " + questions[state] + "\n";
-    submission_msg += "Code: " + code + "\n";
+    submission_msg += "Code: ";
+    submission_msg += team->submission.code;
+    submission_msg += "\n";
     sendMsgToTeam(team, submission_msg);
 }
