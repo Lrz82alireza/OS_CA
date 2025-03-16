@@ -91,6 +91,11 @@ void GameManager::sendCodeToNavigator(Team *team) {
 }
 
 void GameManager::submitCode(Team *team, const std::string& code) {
+    if (team->state.submitted[state]) {
+        sendMsgToTeam(team, "You have already submitted this question.");
+        return;
+    }
+
     strncpy(team->submission.code, code.c_str(), sizeof(team->submission.code) - 1);
     team->state.submitted[state] = true;
 
