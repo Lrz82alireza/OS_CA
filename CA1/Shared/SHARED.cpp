@@ -123,3 +123,13 @@ void sendMsgToTeam(Team* team, const std::string& msg) {
         send(team->navigator->client_fd, msg.c_str(), msg.length(), 0);
     }
 }
+
+int createEvaluationSocket(const char* server_ip) {
+    // ایجاد سوکت TCP
+    int sock_fd = create_socket(false, false);
+
+    // اتصال به سرور ارزیابی
+    connect_socket(sock_fd, server_ip, 65432);
+
+    return sock_fd;
+}

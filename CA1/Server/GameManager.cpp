@@ -2,6 +2,12 @@
 
 void GameManager::handleMessage(Client_info *client_, Team *team_, const std::string& message) {
 
+    int result;
+    if (result = checkTime() == NEXT_TURN) {
+        handleEndTurn();
+        return;
+    }
+
     Message msg = decodeMessage(message);
 
     if (team_->coder->client_fd == client_->client_fd) {
@@ -113,12 +119,118 @@ void GameManager::submitCode(Team *team) {
 
     strncpy(team->submission.problem_id, questions[state].c_str(), sizeof(team->submission.problem_id) - 1);
 
+    team->state.time_submitted[state] = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - gameStartTime).count();
+
     // send submission to STP
     std::string submission_msg = "-------Code submitted-------\n";
     submission_msg += "Team: " + team_name + "\n";
     submission_msg += "Problem: " + questions[state] + "\n";
+    submission_msg += "Time: ";
+    submission_msg += std::to_string(team->state.time_submitted[state]);
+    submission_msg += "\n";
     submission_msg += "Code: ";
     submission_msg += team->submission.code;
     submission_msg += "\n";
     sendMsgToTeam(team, submission_msg);
+}
+
+int GameManager::checkTime() {
+    auto now = std::chrono::steady_clock::now();
+    auto diff = std::chrono::duration_cast<std::chrono::seconds>(now - gameStartTime).count();
+    
+    if (diff >= TIME_LIMIT) {
+        gameStartTime = now;
+        return NEXT_TURN;
+    }
+    return IN_TURN;
+}
+
+int GameManager::handleEndTurn() {
+
+    scoreTeams();
+    sendResults();
+    
+    state++;
+    if (state == MAX_STATE) {
+        // end game
+        std::string msg = "---------Game over---------\n";
+        sendto(*udp_socket, msg.c_str(), msg.length(), 0, (struct sockaddr*)broadcast_addr, sizeof(*broadcast_addr));
+        return 0;
+    }
+    
+
+    return 1;
+}
+
+int GameManager::scoreTeams() {
+    for (auto team : teams) {
+        int score = 0;
+        score = calculateScore(team, state);
+        team->score[state] = score;
+    }
+    return 1;
+}
+
+int GameManager::sendResults()
+{
+    std::string msg = "Results: \n";
+    for (auto team : teams) {
+        msg += team->coder->username;
+        msg += " - ";
+        msg += team->navigator->username;
+        msg += ":\n";
+        for (int i = 0; i < state; i++) {
+            msg += "\t Question ";
+            msg += std::to_string(i + 1);
+            msg += ": ";
+            msg += std::to_string(team->score[i]);
+            msg += "\n";
+        }
+    }
+    sendto(*udp_socket, msg.c_str(), msg.length(), 0, (struct sockaddr*)broadcast_addr, sizeof(*broadcast_addr));
+    return 1;
+}
+
+int GameManager::calculateScore(const Team *team, int state)
+{
+    int score = 0;
+    if (sendCodeToEvaluation(team, state) < 0) {
+        return 0;
+    }
+
+    score += SCORES[state];
+
+    score += calculateBonus(team, state);
+
+    return score;
+}
+
+int GameManager::calculateBonus(const Team *team, int state)
+{
+    int score = 0;
+    if (team->state.time_submitted[state] < TIME_LIMIT / 2) {
+        score += SCORES[state] / 2;
+    } else if (team->state.time_submitted[state] < TIME_LIMIT) {
+        score += SCORES[state] / 5;
+    }
+    return score;
+}
+
+int GameManager::sendCodeToEvaluation(const Team *team, int state)
+{
+    std::string msg = problem_ids[state] + '\n';
+    msg += team->submission.code;
+
+    send(evaluation_fd, msg.c_str(), msg.length(), 0);
+    
+
+    char buffer[16];
+    int len = recv(evaluation_fd, buffer, sizeof(buffer) - 1, 0);
+    if (len > 0) {
+        buffer[len] = '\0';
+        if (strcmp(buffer, PASS) == 0) {
+            return 1;
+        }
+    }
+    return -1;
 }

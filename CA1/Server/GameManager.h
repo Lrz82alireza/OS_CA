@@ -9,9 +9,15 @@
 
 #include "SHARED.h"
 
+#define SERVER_IP "127.0.0.1"
+
 #define Q1 "def add_numbers(a, b):\n"
 #define Q2 "def reverse_string(s):\n"
 #define Q3 "def is_palindrome(s):\n"
+
+#define P_ID1 "add_numbers"
+#define P_ID2 "reverse_string" 
+#define P_ID3 "is_palindrome"
 
 #define CODE_STR "/code"
 #define CHAT_STR "/chat"
@@ -21,8 +27,17 @@
 #define CHAT_N 2
 #define SUBMIT_N 3
 
+#define END_GAME 3
+#define NEXT_TURN 10
+#define IN_TURN 2
+#define TIME_LIMIT 60
+
+#define MAX_STATE 3
+
 
 const std::string questions[3] = {Q1, Q2, Q3};
+const std::string problem_ids[3] = {P_ID1, P_ID2, P_ID3};
+const int SCORES[3] = {1, 3, 5};
 
 struct Message
 {
@@ -38,13 +53,23 @@ public:
             this->clients = clients;
             this->teams = teams;
 
+            gameStartTime = std::chrono::steady_clock::now();
+            evaluation_fd = createEvaluationSocket(SERVER_IP);
             sendQuestion();
         };
+
+    ~GameManager() {
+        if (evaluation_fd != -1) close(evaluation_fd);
+    }
 
     void handleMessage(Client_info *client, Team *team, const std::string& message);
 
 private:
     int state = 0;
+
+    std::chrono::steady_clock::time_point gameStartTime;
+
+    int evaluation_fd;
 
     sockaddr_in* broadcast_addr;
 
@@ -71,7 +96,15 @@ private:
     Message decodeMessage(const std::string& message);
     void sendInvalidMessage(int client_fd);
 
-    
+    int checkTime();
+    int handleEndTurn();
+
+    int scoreTeams();
+    int sendResults();
+
+    int calculateScore(const Team* team, int state);
+    int calculateBonus(const Team* team, int state);
+    int sendCodeToEvaluation(const Team* team, int state);
 };
 
 #endif // GAME_MANAGER_H

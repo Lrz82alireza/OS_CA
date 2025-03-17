@@ -11,6 +11,12 @@
 #include <arpa/inet.h>
 #include <vector>
 #include <algorithm>
+#include <iostream>
+#include <thread>
+#include <chrono>
+
+#define PASS "PASS"
+#define FAIL "FAIL"
 
 struct Client_info {
     char username[50];
@@ -23,6 +29,7 @@ struct Client_info {
 struct State
 {
     bool submitted[3] = {false, false, false};
+    int time_submitted[3] = {0, 0, 0};
 };
 
 struct Submission
@@ -54,5 +61,7 @@ void connect_socket(int sock_fd, const char* ip, int port);
 
 std::string extractType(const std::string& input);
 void sendMsgToTeam(Team* team, const std::string& msg);
+
+int createEvaluationSocket(const char* server_ip);
 
 #endif // SHARED_H
