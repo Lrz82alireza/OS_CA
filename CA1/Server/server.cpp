@@ -503,7 +503,9 @@ public:
     
         while (true) {
             // handle time
-            gameManager->handleTime();
+            if (gameManager->handleTime() == END_GAME) {
+                break;
+            }
 
             prepareFdSetForServer(read_fds, max_fd);
 
@@ -534,16 +536,12 @@ public:
             }
             // handleUdpBroadcast(read_fds);
         }
-    
-        for (auto& client : clients) {
-            close(client->client_fd);
-        }
-        close(udp_socket);
     }
 
     
     ~Server() {
         if (server_fd != -1) close(server_fd);
+        delete(gameManager);
     }
 };
 

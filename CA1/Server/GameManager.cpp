@@ -127,14 +127,16 @@ int GameManager::checkTime() {
 int GameManager::handleEndTurn() {
 
     scoreTeams();
+    my_print("score teams\n");
     sendResults();
+    my_print("sending results\n");
     
     state++;
-    if (state == MAX_STATE) {
+    if (state >= MAX_STATE) {
         // end game
         std::string msg = "---------Game over---------\n";
         sendto(*udp_socket, msg.c_str(), msg.length(), 0, (struct sockaddr*)broadcast_addr, sizeof(*broadcast_addr));
-        return 0;
+        return END_GAME;
     }
     
 
@@ -142,13 +144,17 @@ int GameManager::handleEndTurn() {
 }
 
 int GameManager::scoreTeams() {
+
     for (auto team : teams) {
         float score = 0;
-        score = calculateScore(team, state);
-        team->score[state] = score;
-
-        // createEvaluationSocket
         createEvaluationSocket(SERVER_IP);
+        score = calculateScore(team, state);
+        my_print("calculated score\n");
+        team->score[state] = score;
+        
+        // createEvaluationSocket
+        my_print("created socket for Evaluation\n");
+        close(evaluation_fd);
     }
     return 1;
 }
@@ -179,9 +185,9 @@ float GameManager::calculateScore(const Team *team, int state)
     if (sendCodeToEvaluation(team, state) != 1) {
         return 0;
     }
-
+    
     score += SCORES[state];
-
+    
     score += calculateBonus(team, state);
 
     return score;
@@ -203,9 +209,17 @@ int GameManager::sendCodeToEvaluation(const Team *team, int state)
     std::string msg = problem_ids[state] + '\n';
     msg += team->submission.code;
 
-    send(evaluation_fd, msg.c_str(), msg.length(), 0);
+    try {
+        ssize_t bytes_sent = send(evaluation_fd, msg.c_str(), msg.length(), 0);
+        if (bytes_sent == -1) {
+            throw std::runtime_error("Error in send(): " + std::string(strerror(errno)));
+        }
+    } catch (const std::exception &e) {
+        my_print(("Send failed: " + std::string(e.what()) + "\n").c_str());
+        return -1;
+    }
     
-
+    
     char buffer[16];
     int len = recv(evaluation_fd, buffer, sizeof(buffer) - 1, 0);
     if (len > 0) {
@@ -221,8 +235,7 @@ int GameManager::handleTime()
 {
     int result = checkTime();
     if (result == NEXT_TURN) {
-        handleEndTurn();
-        return 1;
+        return handleEndTurn();
     }
-    return -1;
+    return -2;
 }

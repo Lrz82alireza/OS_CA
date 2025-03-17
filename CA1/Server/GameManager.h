@@ -22,7 +22,8 @@
 #define END_GAME 3
 #define NEXT_TURN 10
 #define IN_TURN 2
-#define TIME_LIMIT 60
+
+#define TIME_LIMIT 30
 
 #define MAX_STATE 3
 
@@ -33,10 +34,9 @@ const float SCORES[3] = {1.0, 3.0, 5.0};
 
 class GameManager {
 public:
-    GameManager(sockaddr_in* broadcast_addr, int* server_fd, int* stp_port, int* udp_socket, int* udp_port, std::vector<Client_info*> clients, std::vector<Team*> teams)
-        : broadcast_addr(broadcast_addr), server_fd(server_fd), stp_port(stp_port), udp_socket(udp_socket), udp_port(udp_port) {
-            this->clients = clients;
-            this->teams = teams;
+    GameManager(sockaddr_in* broadcast_addr, int* server_fd, int* stp_port, int* udp_socket, int* udp_port, std::vector<Client_info*> &clients, std::vector<Team*> &teams)
+        : broadcast_addr(broadcast_addr), server_fd(server_fd), stp_port(stp_port), udp_socket(udp_socket), udp_port(udp_port) ,clients(clients), teams(teams){
+
 
             gameStartTime = std::chrono::steady_clock::now();
             evaluation_fd = createEvaluationSocket(SERVER_IP);
@@ -44,8 +44,35 @@ public:
         };
 
         ~GameManager() {
+            my_print("Destroying GameManager...\n");
+        
+            // بستن سوکت‌های باز
             if (evaluation_fd != -1) close(evaluation_fd);
+            if (udp_socket != nullptr) {
+                close(*udp_socket);
+            }
+            if (server_fd != nullptr) {
+                close(*server_fd);
+            }
+        
+            // آزادسازی حافظه‌ی کلاینت‌ها
+            for (auto client : clients) {
+                if (client) {
+                    close(client->client_fd);
+                    delete client;
+                }
+            }
+            clients.clear();
+        
+            // آزادسازی حافظه‌ی تیم‌ها
+            for (auto team : teams) {
+                delete team;
+            }
+            teams.clear();
+        
+            my_print("GameManager fully cleaned up.\n");
         }
+        
         
     void handleMessage(Client_info *client, Team *team, const std::string& message);
     int handleTime();
@@ -67,8 +94,8 @@ private:
     int* udp_socket;
     int* udp_port;
 
-    std::vector<Client_info*> clients;
-    std::vector<Team*> teams;
+    std::vector<Client_info*> &clients;
+    std::vector<Team*> &teams;
 
     void handleMove(int client_fd);
     void handleChat(int client_fd);
