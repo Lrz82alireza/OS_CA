@@ -418,22 +418,29 @@ public:
         broadcast_addr.sin_addr.s_addr = INADDR_BROADCAST;
     
         while (true) {
+            // handle time
+            gameManager->handleTime();
+
             prepareFdSetForServer(read_fds, max_fd);
-    
+
             // اضافه کردن STDIN_FILENO به مجموعه فایل‌ها
             FD_SET(STDIN_FILENO, &read_fds);
             max_fd = std::max(max_fd, STDIN_FILENO); 
-    
-            int activity = select(max_fd + 1, &read_fds, NULL, NULL, NULL);
+
+            // تنظیم timeout برای select
+            struct timeval timeout;
+            timeout.tv_sec = 0;
+            timeout.tv_usec = 1000000; // 0.5 ثانیه
+
+            int activity = select(max_fd + 1, &read_fds, NULL, NULL, &timeout);
             if (activity < 0) {
                 my_print("select() failed");
                 break;
             }
-    
+        
             // I/O Processing
-            
             handleKeyboardInput(read_fds);
-    
+        
             if (start_flag == -1) {
                 handleNewConnections(read_fds);
                 pairUpClients();

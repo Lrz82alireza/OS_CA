@@ -126,8 +126,20 @@ public:
     void handleUserInput(int tcp_sock) {
         char buffer[1024];
         int len = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
+        
+        
         if (len > 0) {
             buffer[len] = '\0';
+
+            // codeSpace
+            if (decodeMessage(buffer).type == CODE_N) 
+            {
+                std::string tmp = codeSpace();
+                strncpy(buffer, tmp.c_str(), sizeof(buffer) - 1);
+                buffer[sizeof(buffer) - 1] = '\0';
+                len = strlen(buffer);
+            }
+
             send(tcp_sock, buffer, len, 0);
         }
     }

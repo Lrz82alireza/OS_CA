@@ -2,12 +2,6 @@
 
 void GameManager::handleMessage(Client_info *client_, Team *team_, const std::string& message) {
 
-    int result;
-    if (result = checkTime() == NEXT_TURN) {
-        handleEndTurn();
-        return;
-    }
-
     Message msg = decodeMessage(message);
 
     if (team_->coder->client_fd == client_->client_fd) {
@@ -34,6 +28,7 @@ void GameManager::handleCoderMessage(Client_info *client, Team *team, Message &m
 
     default:
         // invalid message
+
         sendInvalidMessage(client->client_fd);
         break;
     }
@@ -57,27 +52,6 @@ void GameManager::handleNavigatorMessage(Client_info *client, Team *team, Messag
         sendInvalidMessage(client->client_fd);
         break;
     }
-}
-
-Message GameManager::decodeMessage(const std::string& message) {
-    std::string type = extractType(message);
-    Message msg = {-1, ""};
-
-    if (type == CODE_STR) {
-        msg.type = CODE_N;
-    } else if (type == CHAT_STR) {
-        msg.type = CHAT_N;
-    } else if (type == SUBMIT_STR) {
-        msg.type = SUBMIT_N;
-    } else {
-        std::string tmp = "Invalid message type: ";
-        tmp += type;
-        tmp += "\n";
-        my_print(tmp.c_str());
-    }
-    msg.content = message.substr(type.length() + 1);
-
-    return msg;
 }
 
 void GameManager::sendQuestion()
@@ -140,7 +114,13 @@ int GameManager::checkTime() {
     
     if (diff >= TIME_LIMIT) {
         gameStartTime = now;
+        halfTimeAnnounced = false;
         return NEXT_TURN;
+    } else if (diff == TIME_LIMIT / 2 && !halfTimeAnnounced) {
+        halfTimeAnnounced = true;
+        std::string msg = "Half time Reached\n";
+        sendto(*udp_socket, msg.c_str(), msg.length(), 0, (struct sockaddr*)broadcast_addr, sizeof(*broadcast_addr));
+
     }
     return IN_TURN;
 }
@@ -164,9 +144,12 @@ int GameManager::handleEndTurn() {
 
 int GameManager::scoreTeams() {
     for (auto team : teams) {
-        int score = 0;
+        float score = 0;
         score = calculateScore(team, state);
         team->score[state] = score;
+
+        // createEvaluationSocket
+        createEvaluationSocket(SERVER_IP);
     }
     return 1;
 }
@@ -179,7 +162,7 @@ int GameManager::sendResults()
         msg += " - ";
         msg += team->navigator->username;
         msg += ":\n";
-        for (int i = 0; i < state; i++) {
+        for (int i = 0; i <= state; i++) {
             msg += "\t Question ";
             msg += std::to_string(i + 1);
             msg += ": ";
@@ -191,10 +174,10 @@ int GameManager::sendResults()
     return 1;
 }
 
-int GameManager::calculateScore(const Team *team, int state)
+float GameManager::calculateScore(const Team *team, int state)
 {
-    int score = 0;
-    if (sendCodeToEvaluation(team, state) < 0) {
+    float score = 0;
+    if (sendCodeToEvaluation(team, state) != 1) {
         return 0;
     }
 
@@ -205,9 +188,9 @@ int GameManager::calculateScore(const Team *team, int state)
     return score;
 }
 
-int GameManager::calculateBonus(const Team *team, int state)
+float GameManager::calculateBonus(const Team *team, int state)
 {
-    int score = 0;
+    float score = 0;
     if (team->state.time_submitted[state] < TIME_LIMIT / 2) {
         score += SCORES[state] / 2;
     } else if (team->state.time_submitted[state] < TIME_LIMIT) {
@@ -231,6 +214,16 @@ int GameManager::sendCodeToEvaluation(const Team *team, int state)
         if (strcmp(buffer, PASS) == 0) {
             return 1;
         }
+    }
+    return -1;
+}
+
+int GameManager::handleTime()
+{
+    int result = checkTime();
+    if (result == NEXT_TURN) {
+        handleEndTurn();
+        return 1;
     }
     return -1;
 }

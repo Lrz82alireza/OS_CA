@@ -19,14 +19,6 @@
 #define P_ID2 "reverse_string" 
 #define P_ID3 "is_palindrome"
 
-#define CODE_STR "/code"
-#define CHAT_STR "/chat"
-#define SUBMIT_STR "/submit"
-
-#define CODE_N 1
-#define CHAT_N 2
-#define SUBMIT_N 3
-
 #define END_GAME 3
 #define NEXT_TURN 10
 #define IN_TURN 2
@@ -37,14 +29,7 @@
 
 const std::string questions[3] = {Q1, Q2, Q3};
 const std::string problem_ids[3] = {P_ID1, P_ID2, P_ID3};
-const int SCORES[3] = {1, 3, 5};
-
-struct Message
-{
-    int type;
-    std::string content;
-};
-
+const float SCORES[3] = {1.0, 3.0, 5.0};
 
 class GameManager {
 public:
@@ -58,14 +43,17 @@ public:
             sendQuestion();
         };
 
-    ~GameManager() {
-        if (evaluation_fd != -1) close(evaluation_fd);
-    }
-
+        ~GameManager() {
+            if (evaluation_fd != -1) close(evaluation_fd);
+        }
+        
     void handleMessage(Client_info *client, Team *team, const std::string& message);
+    int handleTime();
 
 private:
     int state = 0;
+
+    bool halfTimeAnnounced = false;
 
     std::chrono::steady_clock::time_point gameStartTime;
 
@@ -93,7 +81,6 @@ private:
 
     void submitCode(Team *team);
 
-    Message decodeMessage(const std::string& message);
     void sendInvalidMessage(int client_fd);
 
     int checkTime();
@@ -102,9 +89,10 @@ private:
     int scoreTeams();
     int sendResults();
 
-    int calculateScore(const Team* team, int state);
-    int calculateBonus(const Team* team, int state);
+    float calculateScore(const Team* team, int state);
+    float calculateBonus(const Team* team, int state);
     int sendCodeToEvaluation(const Team* team, int state);
+
 };
 
 #endif // GAME_MANAGER_H

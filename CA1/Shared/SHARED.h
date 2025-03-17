@@ -18,6 +18,16 @@
 #define PASS "PASS"
 #define FAIL "FAIL"
 
+#define CODE_STR "/code"
+#define CHAT_STR "/chat"
+#define SUBMIT_STR "/submit"
+#define SAVE_STR "/save"
+
+#define CODE_N 1
+#define CHAT_N 2
+#define SUBMIT_N 3
+#define SAVE_N 4
+
 struct Client_info {
     char username[50];
     char role[20];
@@ -44,11 +54,16 @@ struct Team
 {
     Client_info* coder = nullptr;
     Client_info* navigator = nullptr;
-    int score[3] = {0, 0, 0};
+    float score[3] = {0, 0, 0};
     State state;
     Submission submission;
 };
 
+struct Message
+{
+    int type;
+    std::string content;
+};
 
 void my_print(const char* str);
 std::string to_string(int value);
@@ -63,5 +78,9 @@ std::string extractType(const std::string& input);
 void sendMsgToTeam(Team* team, const std::string& msg);
 
 int createEvaluationSocket(const char* server_ip);
+
+void read_line(std::string& input);
+Message decodeMessage(const std::string& message);
+std::string codeSpace();
 
 #endif // SHARED_H

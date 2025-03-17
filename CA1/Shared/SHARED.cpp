@@ -133,3 +133,59 @@ int createEvaluationSocket(const char* server_ip) {
 
     return sock_fd;
 }
+
+void read_line(std::string& input) {
+    input.clear();
+    char buffer[256];
+    ssize_t bytesRead = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
+
+    if (bytesRead > 0) {
+        buffer[bytesRead] = '\0';
+        input = buffer;
+
+        if (!input.empty() && input.back() == '\n') {
+            input.pop_back();
+        }
+    }
+}
+
+Message decodeMessage(const std::string& message) {
+    std::string type = extractType(message);
+    Message msg = {-1, ""};
+
+    if (type == CODE_STR) {
+        msg.type = CODE_N;
+    } else if (type == CHAT_STR) {
+        msg.type = CHAT_N;
+    } else if (type == SUBMIT_STR) {
+        msg.type = SUBMIT_N;
+    } else if (type == SAVE_STR) {
+        msg.type = SAVE_N;
+    } else {
+        std::string tmp = "Invalid message type: ";
+        tmp += type;
+        tmp += "\n";
+        my_print(tmp.c_str());
+    }
+    msg.content = message.substr(type.length() + 1);
+
+    return msg;
+}
+
+std::string codeSpace() {
+    std::string tmp = "Start writing your code. Type 'save' on a new line to finish.\n";  
+    my_print(tmp.c_str());
+    std::string current_code = "/code ";
+
+    std::string line;
+    while (true) {
+        read_line(line);
+        if (line == SAVE_STR) {
+            my_print("Code saved successfully.\n");
+            break;
+        }
+        current_code += line;
+    }
+    my_print(current_code.c_str());
+    return current_code;
+}
