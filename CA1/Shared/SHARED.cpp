@@ -198,10 +198,10 @@ std::string codeSpace() {
 
 Team* findTeamByClientName(const std::vector<Team*>& teams, const std::string& clientName) {
     for (Team* team : teams) {
-        if (team->coder && team->coder->username == clientName) {
+        if (team->coder != nullptr && team->coder->username == clientName) {
             return team;
         }
-        if (team->navigator && team->navigator->username == clientName) {
+        if (team->navigator != nullptr && team->navigator->username == clientName) {
             return team;
         }
     }

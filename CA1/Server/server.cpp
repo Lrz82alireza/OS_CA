@@ -147,11 +147,12 @@ private:
         
         Team *team = findTeamByClientName(teams, new_client.username);
         if (team != nullptr) {
+            my_print("Client recconected\n");
             handleClientReconnection(teams, clients, ptr);
         } else {
             new_client.has_teammate = false;
         }
-
+        
         clients.push_back(ptr);
         return clients.size();
     }
@@ -177,10 +178,12 @@ private:
         close(client_fd);
 
         // انتظار برای اتصال مجدد کلاینت به پورت جدید
+        my_print("just a new one\n");
         int new_client_fd = waitForClientOnNewPort(new_server_fd);
         if (new_client_fd < 0) return;
 
         // دریافت اطلاعات از کلاینت
+        my_print("just a new one\n");
         Client_info new_client;
         if (!receiveClientInfo(new_client_fd, new_client)) {
             my_print("Failed to receive client information.\n");
@@ -190,6 +193,7 @@ private:
         new_client.port = new_port;
         new_client.client_fd = new_client_fd;
 
+        my_print("just a new one\n");
         if (addNewClient(new_client) == -1) {
             send(new_client.client_fd, "ERR: Invalid information", 25, 0);
             closeClientConnection(assigned_ports, new_client.client_fd, new_port);
