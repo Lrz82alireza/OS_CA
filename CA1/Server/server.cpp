@@ -158,32 +158,93 @@ private:
     }
 
     // تابع اصلی برای مدیریت کلاینت جدید
+    // void handleNewClient(int server_fd) {
+    //     // پذیرش اتصال اولیه
+    //     int client_fd = acceptNewClient(server_fd);
+    //     if (client_fd < 0) return;
+
+    //     // اختصاص پورت جدید به کلاینت
+    //     int new_port = assignNewPort();
+
+    //     // ایجاد سوکت جدید و bind کردن آن به پورت جدید
+    //     int new_server_fd = create_socket(false, false);
+    //     bind_socket(new_server_fd, new_port, false);
+    //     listen(new_server_fd, 5);  // گوش دادن برای اتصال‌های جدید
+
+    //     // ارسال پورت جدید به کلاینت
+    //     sendNewPortToClient(client_fd, new_port);
+
+    //     // بستن اتصال اولیه
+    //     close(client_fd);
+
+    //     // انتظار برای اتصال مجدد کلاینت به پورت جدید
+    //     my_print("just a new one\n");
+    //     int new_client_fd = waitForClientOnNewPort(new_server_fd);
+    //     if (new_client_fd < 0) return;
+
+    //     // دریافت اطلاعات از کلاینت
+    //     my_print("just a new one\n");
+    //     Client_info new_client;
+    //     if (!receiveClientInfo(new_client_fd, new_client)) {
+    //         my_print("Failed to receive client information.\n");
+    //         closeClientConnection(assigned_ports, new_client_fd, new_port);
+    //         return;
+    //     }
+    //     new_client.port = new_port;
+    //     new_client.client_fd = new_client_fd;
+
+    //     my_print("just a new one\n");
+    //     if (addNewClient(new_client) == -1) {
+    //         send(new_client.client_fd, "ERR: Invalid information", 25, 0);
+    //         closeClientConnection(assigned_ports, new_client.client_fd, new_port);
+    //         return;
+    //     }
+
+    //     // چاپ اطلاعات کلاینت جدید
+    //     my_print("New client connected: ");
+    //     my_print(new_client.username);
+    //     my_print(" (");
+    //     my_print(new_client.role);
+    //     my_print(") on port ");
+    //     my_print(std::to_string(new_port).c_str());
+    //     my_print("\n");
+    // }
+
     void handleNewClient(int server_fd) {
         // پذیرش اتصال اولیه
         int client_fd = acceptNewClient(server_fd);
         if (client_fd < 0) return;
-
+    
         // اختصاص پورت جدید به کلاینت
         int new_port = assignNewPort();
-
+    
         // ایجاد سوکت جدید و bind کردن آن به پورت جدید
         int new_server_fd = create_socket(false, false);
         bind_socket(new_server_fd, new_port, false);
-        listen(new_server_fd, 5);  // گوش دادن برای اتصال‌های جدید
-
+    
+        if (listen(new_server_fd, 5) < 0) {  // بررسی خطا در listen
+            perror("Failed to listen on new port");
+            close(new_server_fd);
+            close(client_fd);
+            return;
+        }
+    
         // ارسال پورت جدید به کلاینت
         sendNewPortToClient(client_fd, new_port);
-
+    
         // بستن اتصال اولیه
         close(client_fd);
-
+    
         // انتظار برای اتصال مجدد کلاینت به پورت جدید
-        my_print("just a new one\n");
+        my_print("Waiting for client on new port...\n");
         int new_client_fd = waitForClientOnNewPort(new_server_fd);
+        
+        // بستن سوکت سرور جدید بعد از قبول اتصال
+        close(new_server_fd);
+    
         if (new_client_fd < 0) return;
-
+    
         // دریافت اطلاعات از کلاینت
-        my_print("just a new one\n");
         Client_info new_client;
         if (!receiveClientInfo(new_client_fd, new_client)) {
             my_print("Failed to receive client information.\n");
@@ -192,14 +253,13 @@ private:
         }
         new_client.port = new_port;
         new_client.client_fd = new_client_fd;
-
-        my_print("just a new one\n");
+    
         if (addNewClient(new_client) == -1) {
             send(new_client.client_fd, "ERR: Invalid information", 25, 0);
             closeClientConnection(assigned_ports, new_client.client_fd, new_port);
             return;
         }
-
+    
         // چاپ اطلاعات کلاینت جدید
         my_print("New client connected: ");
         my_print(new_client.username);
@@ -209,7 +269,7 @@ private:
         my_print(std::to_string(new_port).c_str());
         my_print("\n");
     }
-
+    
 
 
 public:
