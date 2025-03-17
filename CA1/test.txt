@@ -1,3 +1,25 @@
-/code def add_numbers(a, b):\n return a + b
+/code 
+def add_numbers(a, b):
+	return a + b
+/save
+
+/code 
+def reverse_string(s):
+	return s[::-1]
+/save
+
+/code is_palindrome(s):
+	return s == s[::-1]
+
 /chat salam eshgham
 /submit 
+
+/code 
+adhljka
+fa
+f
+sf
+/save
+
+/code gkjghgk
+hjgjjkkg

@@ -55,6 +55,12 @@ int create_socket(bool is_udp, bool is_broadcast) {
         exit(EXIT_FAILURE);
     }
 
+    if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEPORT, &reuseAddr, sizeof(reuseAddr)) < 0) {
+        perror("Failed to set SO_REUSEPORT");
+        close(sock_fd);
+        exit(EXIT_FAILURE);
+    }
+
     // فعال‌سازی Broadcast در صورت نیاز
     if (is_udp && is_broadcast) {
         int broadcastEnable = 1;
@@ -188,4 +194,74 @@ std::string codeSpace() {
     }
     my_print(current_code.c_str());
     return current_code;
+}
+
+Team* findTeamByClientName(const std::vector<Team*>& teams, const std::string& clientName) {
+    for (Team* team : teams) {
+        if (team->coder && team->coder->username == clientName) {
+            return team;
+        }
+        if (team->navigator && team->navigator->username == clientName) {
+            return team;
+        }
+    }
+    return nullptr;
+}
+
+Client_info *findPartnerInTeam(Team *team, const std::string& clientName)
+{
+    if (team != nullptr) {
+        if (strcmp(team->coder->username, clientName.c_str()) == 0) {
+            return team->navigator;
+        } else {
+            return team->coder;
+        }
+    } 
+
+    return nullptr;
+}
+
+void handleClientDisconnection(std::set<int> assigned_ports, std::vector<Team *> &teams, std::vector<Client_info *> &clients, Client_info *client)
+{
+    my_print("Client disconnected.\n");
+    closeClientConnection(assigned_ports, client->client_fd, client->port);
+
+    Team *team = findTeamByClientName(teams, client->username);
+    Client_info *partner = findPartnerInTeam(team, client->username);
+    if (partner != nullptr) {
+        std::string msg = "Your teammate disconnected.\n";
+        send(partner->client_fd, msg.c_str(), strlen(msg.c_str()), 0);
+    }
+
+    // erase from clients
+    auto it = std::find(clients.begin(), clients.end(), client);
+    if (it != clients.end()) {
+        clients.erase(it);
+    }
+}
+
+// تابع برای بستن اتصال اولیه با کلاینت
+void closeClientConnection(std::set<int> assigned_ports, int client_fd, int port) {
+    assigned_ports.erase(port);
+    shutdown(client_fd, SHUT_RDWR);
+    close(client_fd);
+}
+
+Client_info * handleClientReconnection(std::vector<Team *> &teams, std::vector<Client_info *> &clients, Client_info *client)
+{
+    Team *team = findTeamByClientName(teams, client->username);
+    Client_info *partner = findPartnerInTeam(team, client->username);
+    if (partner != nullptr) {
+        std::string msg = "Your teammate reconnected.\n";
+        send(partner->client_fd, msg.c_str(), strlen(msg.c_str()), 0);
+    }
+
+    client->has_teammate = true;
+    if (strcmp(team->coder->username, client->username) == 0) {
+        team->coder = client;
+    } else {
+        team->navigator = client;
+    }
+
+    return client;
 }

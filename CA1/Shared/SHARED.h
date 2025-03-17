@@ -14,6 +14,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <set>
 
 #define PASS "PASS"
 #define FAIL "FAIL"
@@ -65,6 +66,7 @@ struct Message
     std::string content;
 };
 
+
 void my_print(const char* str);
 std::string to_string(int value);
 std::string to_string(double value);
@@ -83,4 +85,11 @@ void read_line(std::string& input);
 Message decodeMessage(const std::string& message);
 std::string codeSpace();
 
+Team* findTeamByClientName(const std::vector<Team*>& teams, const std::string& clientName);
+Client_info *findPartnerInTeam(Team *team, const std::string& clientName);
+
+void handleClientDisconnection(std::set<int> assigned_ports, std::vector<Team *> &teams, std::vector<Client_info *> &clients, Client_info *client);
+void closeClientConnection(std::set<int> assigned_ports, int client_fd, int port);
+
+Client_info * handleClientReconnection(std::vector<Team *> &teams, std::vector<Client_info *> &clients, Client_info *client);
 #endif // SHARED_H

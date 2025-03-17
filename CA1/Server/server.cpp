@@ -4,9 +4,11 @@
 #include <arpa/inet.h>
 #include <vector>
 #include <algorithm>
+#include <set>
 
 #include "SHARED.h"
 #include "GameManager.h"
+
 
 #define UDP_PORT 8081
 
@@ -18,9 +20,14 @@
 
 #define START_STR "start"
 
+std::set<int> assigned_ports;
+int BASE_PORT = 5000;
+
 class Server {
 private:
     struct sockaddr_in broadcast_addr;
+
+    int port_cntr = 0;
 
     int server_fd;
     int stp_port;
@@ -57,7 +64,18 @@ private:
 
     // تابع برای اختصاص پورت جدید به کلاینت
     int assignNewPort() {
-        return 5000 + clients.size();  // اختصاص پورت جدید از 5000 به بعد
+        // بررسی پورت‌های قبلی و اختصاص مجدد در صورت امکان
+        for (int port = BASE_PORT; port < BASE_PORT + clients.size(); ++port) {
+            if (assigned_ports.find(port) == assigned_ports.end()) {  // اگر پورت قبلاً اختصاص داده نشده است
+                assigned_ports.insert(port);
+                return port;
+            }
+        }
+
+        // اگر هیچ پورتی از قبل آزاد نبود، یک پورت جدید اختصاص بده
+        int new_port = BASE_PORT + clients.size();
+        assigned_ports.insert(new_port);
+        return new_port;
     }
 
     // تابع برای ارسال پورت جدید به کلاینت
@@ -65,11 +83,6 @@ private:
         char port_msg[10];
         sprintf(port_msg, "%d", new_port);
         send(client_fd, port_msg, strlen(port_msg), 0);
-    }
-
-    // تابع برای بستن اتصال اولیه با کلاینت
-    void closeClientConnection(int client_fd) {
-        close(client_fd);
     }
 
     // تابع برای انتظار و پذیرش اتصال مجدد کلاینت به پورت جدید
@@ -130,8 +143,15 @@ private:
         if (checkClientInfo(new_client) == -1) {
             return -1;
         }
-        new_client.has_teammate = false;
         Client_info * ptr = new Client_info(new_client);
+        
+        Team *team = findTeamByClientName(teams, new_client.username);
+        if (team != nullptr) {
+            handleClientReconnection(teams, clients, ptr);
+        } else {
+            new_client.has_teammate = false;
+        }
+
         clients.push_back(ptr);
         return clients.size();
     }
@@ -154,7 +174,7 @@ private:
         sendNewPortToClient(client_fd, new_port);
 
         // بستن اتصال اولیه
-        closeClientConnection(client_fd);
+        close(client_fd);
 
         // انتظار برای اتصال مجدد کلاینت به پورت جدید
         int new_client_fd = waitForClientOnNewPort(new_server_fd);
@@ -164,7 +184,7 @@ private:
         Client_info new_client;
         if (!receiveClientInfo(new_client_fd, new_client)) {
             my_print("Failed to receive client information.\n");
-            closeClientConnection(new_client_fd);
+            closeClientConnection(assigned_ports, new_client_fd, new_port);
             return;
         }
         new_client.port = new_port;
@@ -172,7 +192,7 @@ private:
 
         if (addNewClient(new_client) == -1) {
             send(new_client.client_fd, "ERR: Invalid information", 25, 0);
-            closeClientConnection(new_client.client_fd);
+            closeClientConnection(assigned_ports, new_client.client_fd, new_port);
             return;
         }
 
@@ -256,9 +276,7 @@ public:
                 
                     ++it;
                 } else {
-                    my_print("Client disconnected.\n");
-                    close(client->client_fd);
-                    it = clients.erase(it);
+                    handleClientDisconnection(assigned_ports, teams, clients, *it);
                 }
             } else {
                 ++it;
@@ -392,12 +410,14 @@ public:
         for (auto team : teams) {
             if (handleGameMessege(team->coder, team, read_fds) == -1) {
                 // todo: remove client from teams
+                handleClientDisconnection(assigned_ports, teams, clients, team->coder);
                 my_print("Client ");
                 my_print(team->coder->username);
                 my_print(" disconnected.\n");
             }
             if (handleGameMessege(team->navigator, team, read_fds) == -1) {
                 // todo: remove client from teams
+                handleClientDisconnection(assigned_ports, teams, clients, team->navigator);
                 my_print("Client ");
                 my_print(team->navigator->username);
                 my_print(" disconnected.\n");
@@ -441,8 +461,8 @@ public:
             // I/O Processing
             handleKeyboardInput(read_fds);
         
+            handleNewConnections(read_fds);
             if (start_flag == -1) {
-                handleNewConnections(read_fds);
                 pairUpClients();
                 handleClientMessages(read_fds);
             } else {

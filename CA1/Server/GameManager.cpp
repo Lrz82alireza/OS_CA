@@ -28,7 +28,6 @@ void GameManager::handleCoderMessage(Client_info *client, Team *team, Message &m
 
     default:
         // invalid message
-
         sendInvalidMessage(client->client_fd);
         break;
     }
