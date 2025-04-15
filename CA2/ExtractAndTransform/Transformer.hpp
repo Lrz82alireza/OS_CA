@@ -18,4 +18,4 @@ Transformer::~Transformer()
 {
 }
 
-#endif TRANSFORMER_HPP
+#endif // TRANSFORMER_HPP
