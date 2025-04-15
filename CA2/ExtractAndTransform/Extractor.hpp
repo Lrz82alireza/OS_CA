@@ -25,6 +25,10 @@ inline Extractor::Extractor(pid_t pid, int fd[2])
 
 Extractor::~Extractor()
 {
+    if (pid == 0)
+    {
+        _exit(0);
+    }
 }
 
 #endif // ETRACTOR_HPP

@@ -43,6 +43,11 @@ int main ()
         // Create child for Extractor
         pid_t pid = fork();
         checkForkError(pid);
+        callExtractor(pid, fd, i);
+
+        // Create child for Transformer
+        pid_t pid2 = fork();
+        checkForkError(pid2);
 
     }
 }
