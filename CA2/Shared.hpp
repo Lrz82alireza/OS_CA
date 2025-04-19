@@ -37,6 +37,16 @@ struct ExtractedData
     char minimumRequirements[FIELD_SIZE];
 };
 
+struct TransformerData
+{
+    char title[FIELD_SIZE];
+    float originalPrice;
+    float discountedPrice[FIELD_SIZE];
+    int recentReviewsSummary[FIELD_SIZE];
+    int allReviewsSummary[FIELD_SIZE];
+    int recentReviewsNumber[FIELD_SIZE];
+    int allReviewsNumber[FIELD_SIZE];
+};
 
 
 #endif // SHARED_HPP

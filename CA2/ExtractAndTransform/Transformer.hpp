@@ -1,16 +1,22 @@
 #ifndef TRANSFORMER_HPP
 #define TRANSFORMER_HPP
 
+#include "Shared.hpp"
+
 class Transformer
 {
 private:
-    /* data */
+    pid_t pid; 
+    int fd[2];
+
+
 public:
-    Transformer(/* args */);
+    Transformer(pid_t pid, int fd[2]);
     ~Transformer();
 };
 
-Transformer::Transformer(/* args */)
+Transformer::Transformer(pid_t pid, int fd[2])
+                : pid(pid), fd{fd[0], fd[1]}
 {
 }
 

@@ -28,6 +28,10 @@ int callExtractor(pid_t pid, int fd[2], int index) {
     }
 }
 
+int calltransformer(){
+    
+}
+
 int main ()
 {
     for (int i = 0; i < PROC_NUM; i++)
