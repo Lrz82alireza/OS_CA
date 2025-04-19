@@ -28,8 +28,12 @@ int callExtractor(pid_t pid, int fd[2], int index) {
     }
 }
 
-int calltransformer(){
-    
+int calltransformer(pid_t pid, int fd[2]){
+    if (pid == 0)
+    {
+        Transformer trans(pid, fd);
+        trans.run();
+    }
 }
 
 int main ()

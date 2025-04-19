@@ -57,6 +57,14 @@ vector<ExtractedData> Extractor::extract(string path)
 
 int Extractor::sendDataToTransformer(vector<ExtractedData> dataList){
     close(fd[READ_END]);
+
+    int d_size = dataList.size();
+    if (write(fd[WRITE_END], &d_size, sizeof(int)) == -1)
+    {
+        perror("write");
+        exit(EXIT_FAILURE);
+    }
+
     if (write(fd[WRITE_END], dataList.data(), dataList.size() * sizeof(ExtractedData)) == -1)
     {
         perror("write");

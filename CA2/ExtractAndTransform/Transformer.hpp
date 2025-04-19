@@ -9,10 +9,20 @@ private:
     pid_t pid; 
     int fd[2];
 
+    vector<TransformerData> transformedDataList;
 
+    vector<ExtractedData> readDataFromExtractor();
+    TransformerData transformLine(const ExtractedData& data);
+    vector<TransformerData> transform(const vector<ExtractedData>& dataList);
+    int sendDataToLoader(vector<TransformerData> dataList);
+
+    float priceToPercent(float price, float discount);
+    int extractReviewsNumber(const string& str);
 public:
     Transformer(pid_t pid, int fd[2]);
     ~Transformer();
+
+    int run();
 };
 
 Transformer::Transformer(pid_t pid, int fd[2])

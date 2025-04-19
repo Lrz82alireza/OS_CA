@@ -11,6 +11,8 @@
 #include <vector>       
 #include <fstream>
 #include <sstream>
+#include <algorithm>
+#include <map>
 
 using namespace std;
 
@@ -41,12 +43,21 @@ struct TransformerData
 {
     char title[FIELD_SIZE];
     float originalPrice;
-    float discountedPrice[FIELD_SIZE];
-    int recentReviewsSummary[FIELD_SIZE];
-    int allReviewsSummary[FIELD_SIZE];
-    int recentReviewsNumber[FIELD_SIZE];
-    int allReviewsNumber[FIELD_SIZE];
+    float discountedPrice;
+    int recentReviewsSummary;
+    int allReviewsSummary;
+    int recentReviewsNumber;
+    int allReviewsNumber;
 };
 
+map<string, int> ReviewsSummaryMap = {
+    {"Overwhelmingly Positive", 7},
+    {"Very Positive", 6},
+    {"Positive", 5},
+    {"Mostly Positive", 4},
+    {"Mixed", 3},
+    {"Mostly Negative", 2},
+    {"Overwhelmingly Negative", 1}
+};
 
 #endif // SHARED_HPP
