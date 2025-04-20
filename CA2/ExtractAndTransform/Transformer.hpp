@@ -14,7 +14,7 @@ private:
     vector<ExtractedData> readDataFromExtractor();
     TransformerData transformLine(const ExtractedData& data);
     vector<TransformerData> transform(const vector<ExtractedData>& dataList);
-    int sendDataToLoader(vector<TransformerData> dataList);
+    int sendDataToLoader(const std::vector<TransformerData>& dataList);
 
     float priceToPercent(float price, float discount);
     int extractReviewsNumber(const string& str);

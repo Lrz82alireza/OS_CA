@@ -3,12 +3,15 @@
 int Transformer::run()
 {
     transformedDataList = this->transform(this->readDataFromExtractor());
-    this->sendDataToLoader(this->transformedDataList);
+    // printDataList(this->transformedDataList);
+    // this->sendDataToLoader(this->transformedDataList);
     return 0;
 }
 
-int Transformer::sendDataToLoader(vector<TransformerData> dataList)
+int Transformer::sendDataToLoader(const std::vector<TransformerData>& dataList)
 {
+    printf("Sending data to loader...\n");
+
     int fd = open(NAMED_PIPE_PATH, O_WRONLY | O_NONBLOCK);
     if (fd == -1)
     {
@@ -16,21 +19,29 @@ int Transformer::sendDataToLoader(vector<TransformerData> dataList)
         exit(EXIT_FAILURE);
     }
 
-    int d_size = dataList.size();
-    if (write(fd, &d_size, sizeof(int)) == -1)
+    for (const auto& item : dataList)
     {
-        perror("write size failed");
+        if (write(fd, &item, sizeof(TransformerData)) == -1)
+        {
+            perror("write data failed");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    TransformerData endMarker = {};
+    strncpy(endMarker.title, "__END__", FIELD_SIZE - 1);
+    endMarker.title[FIELD_SIZE - 1] = '\0';
+
+    if (write(fd, &endMarker, sizeof(TransformerData)) == -1)
+    {
+        perror("write end marker failed");
         exit(EXIT_FAILURE);
     }
 
-    if (write(fd, &dataList[0], d_size * sizeof(TransformerData)) == -1)
-    {
-        perror("write data failed");
-        exit(EXIT_FAILURE);
-    }
     close(fd);
     return 0;
 }
+
 
 vector<TransformerData> Transformer::transform(const vector<ExtractedData>& dataList)
 {
@@ -41,7 +52,16 @@ vector<TransformerData> Transformer::transform(const vector<ExtractedData>& data
 
     for (const auto& data : dataList)
     {
-        transformedDataList.push_back(this->transformLine(data));
+        try
+        {
+            transformedDataList.push_back(this->transformLine(data));
+        }
+        catch(const std::exception& e)
+        {
+            printData(data);
+            std::cout << "Here in " << e.what() << '\n';
+        }
+        
     }
 
     return transformedDataList;
@@ -52,13 +72,15 @@ TransformerData Transformer::transformLine(const ExtractedData& data)
     TransformerData transformedData;
     
     // title
-    strcpy(transformedData.title, data.title);
+    safeCopy(transformedData.title, data.title);
 
     // originalPrice
-    transformedData.originalPrice = atof(substr(data.originalPrice, 1, strlen(data.originalPrice) - 1).c_str());
+    // printData(data);
+    transformedData.originalPrice = atof(substr_(data.originalPrice, 1, strlen(data.originalPrice) - 1).c_str());
+    
     // discountedPrice
     transformedData.discountedPrice = priceToPercent(transformedData.originalPrice
-                                                        , atof(substr(data.discountedPrice, 1, strlen(data.discountedPrice) - 1).c_str()));
+                                                        , atof(substr_(data.discountedPrice, 1, strlen(data.discountedPrice) - 1).c_str()));
 
     // recentReviewsSummary
     transformedData.recentReviewsSummary = ReviewsSummaryMap[data.recentReviewsSummary];
@@ -88,15 +110,17 @@ int Transformer::extractReviewsNumber(const string& str)
             break;
         }
     }
-
     return number;
 }
 
 float Transformer::priceToPercent(float price, float discount)
 {
-    if (discount == 0)
+    float result = (price - discount) / price * 100;
+    if (result == 0)
+    {
         return 1;
-    return (price - discount) / price * 100;
+    }
+    return result;
 }
 
 std::vector<ExtractedData> Transformer::readDataFromExtractor() {

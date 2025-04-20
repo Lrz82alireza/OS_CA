@@ -21,7 +21,7 @@ using namespace std;
 #define READ_END 0
 #define WRITE_END 1
 
-#define FIELD_SIZE 512
+#define FIELD_SIZE 1024
 
 #define NAMED_PIPE_PATH "../NP/pipe"
 
@@ -48,10 +48,10 @@ struct TransformerData
     char title[FIELD_SIZE];
     float originalPrice;
     float discountedPrice;
-    int recentReviewsSummary;
-    int allReviewsSummary;
-    int recentReviewsNumber;
-    int allReviewsNumber;
+    float recentReviewsSummary;
+    float allReviewsSummary;
+    float recentReviewsNumber;
+    float allReviewsNumber;
 };
 
 inline map<string, int> ReviewsSummaryMap = {
@@ -64,6 +64,10 @@ inline map<string, int> ReviewsSummaryMap = {
     {"Overwhelmingly Negative", 1}
 };
 
-string substr(const char* src, int start, int length);
+string substr_(const char* src, int start, int length);
+void printData(const ExtractedData& data);
+void printData(const TransformerData& data);
+void safeCopy(char* dest, const string& src);
+void printDataList(const vector<TransformerData>& dataList);
 
 #endif // SHARED_HPP

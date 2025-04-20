@@ -11,20 +11,20 @@ ExtractedData Extractor::extractLine(const string& line)
     while (getline(ss, field, ','))
     {
         switch (col) {
-            case 0: strcpy(data.title, field.c_str()); break;
-            case 1: strcpy(data.originalPrice, field.c_str()); break;
-            case 2: strcpy(data.discountedPrice, field.c_str()); break;
-            case 3: strcpy(data.link, field.c_str()); break;
-            case 4: strcpy(data.gameDescription, field.c_str()); break;
-            case 5: strcpy(data.recentReviewsSummary, field.c_str()); break;
-            case 6: strcpy(data.allReviewsSummary, field.c_str()); break;
-            case 7: strcpy(data.recentReviewsNumber, field.c_str()); break;
-            case 8: strcpy(data.allReviewsNumber, field.c_str()); break;
-            case 9: strcpy(data.developer, field.c_str()); break;
-            case 10: strcpy(data.publisher, field.c_str()); break;
-            case 11: strcpy(data.popularTags, field.c_str()); break;
-            case 12: strcpy(data.gameFeatures, field.c_str()); break;  
-            case 13: strcpy(data.minimumRequirements, field.c_str()); break;
+            case 0: safeCopy(data.title, field.c_str()); break;
+            case 1: safeCopy(data.originalPrice, field.c_str()); break;
+            case 2: safeCopy(data.discountedPrice, field.c_str()); break;
+            case 3: safeCopy(data.link, field.c_str()); break;
+            case 4: safeCopy(data.gameDescription, field.c_str()); break;
+            case 5: safeCopy(data.recentReviewsSummary, field.c_str()); break;
+            case 6: safeCopy(data.allReviewsSummary, field.c_str()); break;
+            case 7: safeCopy(data.recentReviewsNumber, field.c_str()); break;
+            case 8: safeCopy(data.allReviewsNumber, field.c_str()); break;
+            case 9: safeCopy(data.developer, field.c_str()); break;
+            case 10: safeCopy(data.publisher, field.c_str()); break;
+            case 11: safeCopy(data.popularTags, field.c_str()); break;
+            case 12: safeCopy(data.gameFeatures, field.c_str()); break;  
+            case 13: safeCopy(data.minimumRequirements, field.c_str()); break;
             default: break;
         }
         col++;
