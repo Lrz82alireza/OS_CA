@@ -25,13 +25,17 @@ public:
     int run();
 };
 
-Transformer::Transformer(pid_t pid, int fd[2])
+inline Transformer::Transformer(pid_t pid, int fd[2])
                 : pid(pid), fd{fd[0], fd[1]}
 {
 }
 
-Transformer::~Transformer()
+inline Transformer::~Transformer()
 {
+    if (pid == 0)
+    {
+        _exit(0);
+    }
 }
 
 #endif // TRANSFORMER_HPP

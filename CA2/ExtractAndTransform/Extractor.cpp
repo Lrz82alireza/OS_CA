@@ -55,21 +55,23 @@ vector<ExtractedData> Extractor::extract(string path)
     return dataList;
 }
 
-int Extractor::sendDataToTransformer(vector<ExtractedData> dataList){
+int Extractor::sendDataToTransformer(const std::vector<ExtractedData>& dataList) {
     close(fd[READ_END]);
 
-    int d_size = dataList.size();
-    if (write(fd[WRITE_END], &d_size, sizeof(int)) == -1)
-    {
+    for (const auto& item : dataList) {
+        if (write(fd[WRITE_END], &item, sizeof(ExtractedData)) == -1) {
+            perror("write");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    ExtractedData endMarker = {};
+    strncpy(endMarker.title, "__END__", FIELD_SIZE - 1);
+    if (write(fd[WRITE_END], &endMarker, sizeof(ExtractedData)) == -1) {
         perror("write");
         exit(EXIT_FAILURE);
     }
 
-    if (write(fd[WRITE_END], dataList.data(), dataList.size() * sizeof(ExtractedData)) == -1)
-    {
-        perror("write");
-        exit(EXIT_FAILURE);
-    }
     close(fd[WRITE_END]);
     return 1;
 }

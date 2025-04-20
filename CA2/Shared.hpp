@@ -8,6 +8,7 @@
 #include <cstdlib>       // exit()
 #include <sys/types.h>  // برای pid_t
 #include <sys/stat.h>   // mkfifo()
+#include <fcntl.h>      // open()
 #include <string>        
 #include <vector>       
 #include <fstream>
@@ -53,7 +54,7 @@ struct TransformerData
     int allReviewsNumber;
 };
 
-map<string, int> ReviewsSummaryMap = {
+inline map<string, int> ReviewsSummaryMap = {
     {"Overwhelmingly Positive", 7},
     {"Very Positive", 6},
     {"Positive", 5},
@@ -62,5 +63,7 @@ map<string, int> ReviewsSummaryMap = {
     {"Mostly Negative", 2},
     {"Overwhelmingly Negative", 1}
 };
+
+string substr(const char* src, int start, int length);
 
 #endif // SHARED_HPP

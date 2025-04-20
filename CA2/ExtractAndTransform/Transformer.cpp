@@ -9,13 +9,35 @@ int Transformer::run()
 
 int Transformer::sendDataToLoader(vector<TransformerData> dataList)
 {
-    
+    int fd = open(NAMED_PIPE_PATH, O_WRONLY | O_NONBLOCK);
+    if (fd == -1)
+    {
+        perror("open failed");
+        exit(EXIT_FAILURE);
+    }
+
+    int d_size = dataList.size();
+    if (write(fd, &d_size, sizeof(int)) == -1)
+    {
+        perror("write size failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (write(fd, &dataList[0], d_size * sizeof(TransformerData)) == -1)
+    {
+        perror("write data failed");
+        exit(EXIT_FAILURE);
+    }
+    close(fd);
+    return 0;
 }
 
 vector<TransformerData> Transformer::transform(const vector<ExtractedData>& dataList)
 {
+    printf("Transforming...\n");
+
     vector<TransformerData> transformedDataList;
-    transformedDataList.reserve(dataList.size());
+    // transformedDataList.reserve(dataList.size());
 
     for (const auto& data : dataList)
     {
@@ -28,18 +50,15 @@ vector<TransformerData> Transformer::transform(const vector<ExtractedData>& data
 TransformerData Transformer::transformLine(const ExtractedData& data)
 {
     TransformerData transformedData;
-    string temp;
     
     // title
     strcpy(transformedData.title, data.title);
 
     // originalPrice
-    temp = data.originalPrice;
-    transformedData.originalPrice = atof(temp.substr(1).c_str());
+    transformedData.originalPrice = atof(substr(data.originalPrice, 1, strlen(data.originalPrice) - 1).c_str());
     // discountedPrice
-    temp = data.discountedPrice;
     transformedData.discountedPrice = priceToPercent(transformedData.originalPrice
-                                                        , atof(temp.substr(1).c_str()));
+                                                        , atof(substr(data.discountedPrice, 1, strlen(data.discountedPrice) - 1).c_str()));
 
     // recentReviewsSummary
     transformedData.recentReviewsSummary = ReviewsSummaryMap[data.recentReviewsSummary];
@@ -80,22 +99,23 @@ float Transformer::priceToPercent(float price, float discount)
     return (price - discount) / price * 100;
 }
 
-vector<ExtractedData> Transformer::readDataFromExtractor()
-{
+std::vector<ExtractedData> Transformer::readDataFromExtractor() {
     close(fd[WRITE_END]);
-    vector<ExtractedData> dataList;
-    int d_size;
-    if (read(fd[READ_END], &d_size, sizeof(int)) == -1)
-    {
-        perror("read");
-        exit(EXIT_FAILURE);
-    }
-    dataList.resize(d_size);
 
-    if (read(fd[READ_END], &dataList, d_size * sizeof(ExtractedData)) == -1)
-    {
-        perror("read");
-        exit(EXIT_FAILURE);
+    std::vector<ExtractedData> dataList;
+    ExtractedData item;
+
+    while (true) {
+        ssize_t r = read(fd[READ_END], &item, sizeof(ExtractedData));
+        if (r == -1) {
+            perror("read");
+            exit(EXIT_FAILURE);
+        }
+        if (r == 0) break;
+
+        if (strncmp(item.title, "__END__", FIELD_SIZE) == 0) break;
+
+        dataList.push_back(item);
     }
 
     close(fd[READ_END]);

@@ -5,11 +5,7 @@
 
 #define PROC_NUM 3
 
-vector<string> PATHS = {
-    "../assets/steamdb1.csv",
-    "../assets/steamdb2.csv",
-    "../assets/steamdb3.csv"
-};
+const string PATH = "./assets/steamdb";
 
 int checkForkError(pid_t pid) {
     if (pid == -1)
@@ -24,8 +20,12 @@ int callExtractor(pid_t pid, int fd[2], int index) {
     if (pid == 0)
     {
         Extractor extr(pid, fd);
-        extr.sendDataToTransformer(extr.extract(PATHS[index]));
+
+        string path = PATH + to_string(index + 1) + ".csv";
+
+        extr.sendDataToTransformer(extr.extract(path));
     }
+    return 0;
 }
 
 int calltransformer(pid_t pid, int fd[2]){
@@ -34,6 +34,7 @@ int calltransformer(pid_t pid, int fd[2]){
         Transformer trans(pid, fd);
         trans.run();
     }
+    return 0;
 }
 
 int main ()
@@ -59,6 +60,7 @@ int main ()
         // Create child for Transformer
         pid_t pid2 = fork();
         checkForkError(pid2);
+        calltransformer(pid2, fd);
 
     }
 }

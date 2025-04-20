@@ -15,7 +15,7 @@ public:
     ~Extractor();
     
     vector<ExtractedData> extract(string path);
-    int sendDataToTransformer(vector<ExtractedData> dataList);
+    int sendDataToTransformer(const std::vector<ExtractedData>& dataList);
 };
 
 inline Extractor::Extractor(pid_t pid, int fd[2])
@@ -23,7 +23,7 @@ inline Extractor::Extractor(pid_t pid, int fd[2])
 {
 }
 
-Extractor::~Extractor()
+inline Extractor::~Extractor()
 {
     if (pid == 0)
     {
