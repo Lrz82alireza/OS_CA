@@ -7,6 +7,7 @@
 #include <cstring>       // strcpy, strlen و توابع مشابه
 #include <cstdlib>       // exit()
 #include <sys/types.h>  // برای pid_t
+#include <sys/stat.h>   // mkfifo()
 #include <string>        
 #include <vector>       
 #include <fstream>
@@ -20,6 +21,8 @@ using namespace std;
 #define WRITE_END 1
 
 #define FIELD_SIZE 512
+
+#define NAMED_PIPE_PATH "../NP/pipe"
 
 struct ExtractedData
 {

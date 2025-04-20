@@ -7,7 +7,7 @@ class Transformer
 {
 private:
     pid_t pid; 
-    int fd[2];
+    int fd[2];    
 
     vector<TransformerData> transformedDataList;
 

@@ -38,6 +38,9 @@ int calltransformer(pid_t pid, int fd[2]){
 
 int main ()
 {
+    // Create a named pipe for LOADER
+    mkfifo(NAMED_PIPE_PATH, 0666);
+
     for (int i = 0; i < PROC_NUM; i++)
     {
         int fd[2];
