@@ -9,17 +9,15 @@ PROCESS_BIN = bin/processor
 SRCS := $(filter-out ./Loader/LoaderMain.cpp ./ProcessingNodes/ProcessingMain.cpp, $(shell find . -name "*.cpp"))
 OBJS := $(SRCS:.cpp=.o)
 
-SHARED_OBJ = Shared.o
-
 # Loader
 LOADER_SRC = Loader/LoaderMain.cpp
 LOADER_OBJ = Loader/LoaderMain.o
-LOADER_OBJS = Loader/Loader.o $(LOADER_OBJ)
+LOADER_OBJS = $(LOADER_OBJ)
 
-# Processing Nodes
+# Processor
 PROCESS_SRC = ProcessingNodes/ProcessingMain.cpp
 PROCESS_OBJ = ProcessingNodes/ProcessingMain.o
-PROCESS_OBJS = ProcessingNodes/ProcessingNode.o $(PROCESS_OBJ)
+PROCESS_OBJS = $(PROCESS_OBJ)
 
 COLOR_GREEN = \033[0;32m
 COLOR_YELLOW = \033[1;33m
@@ -31,23 +29,23 @@ all: $(TARGET) $(LOADER_BIN) $(PROCESS_BIN)
 $(TARGET): $(OBJS)
 	@mkdir -p bin
 	@printf "$(COLOR_YELLOW)🔧 Linking run...$(COLOR_RESET)\n"
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
 	@printf "$(COLOR_GREEN)✅ Built: $(TARGET)$(COLOR_RESET)\n"
 
-$(LOADER_BIN): $(LOADER_OBJS) $(SHARED_OBJ)
+$(LOADER_BIN): $(OBJS) $(LOADER_OBJS)
 	@mkdir -p bin
 	@printf "$(COLOR_YELLOW)🔧 Linking loader...$(COLOR_RESET)\n"
 	$(CXX) $(CXXFLAGS) -o $@ $^
 	@printf "$(COLOR_GREEN)✅ Built: $(LOADER_BIN)$(COLOR_RESET)\n"
 
-$(PROCESS_BIN): $(PROCESS_OBJS) $(SHARED_OBJ)
+$(PROCESS_BIN): $(OBJS) $(PROCESS_OBJS)
 	@mkdir -p bin
 	@printf "$(COLOR_YELLOW)🔧 Linking processor...$(COLOR_RESET)\n"
 	$(CXX) $(CXXFLAGS) -o $@ $^
 	@printf "$(COLOR_GREEN)✅ Built: $(PROCESS_BIN)$(COLOR_RESET)\n"
 
 %.o: %.cpp
-	@printf "$(COLOR_YELLOW)📆 Compiling %s ...$(COLOR_RESET)\n" "$<"
+	@printf "$(COLOR_YELLOW)📦 Compiling %s ...$(COLOR_RESET)\n" "$<"
 	@$(CXX) $(CXXFLAGS) -c $< -o $@ || (printf "$(COLOR_RED)❌ Failed: %s$(COLOR_RESET)\n" "$<" && exit 1)
 
 run: all
@@ -64,5 +62,5 @@ run-processor: all
 
 clean:
 	@printf "$(COLOR_YELLOW)🪹 Cleaning...$(COLOR_RESET)\n"
-	@rm -f $(OBJS) $(LOADER_OBJ) $(LOADER_OBJS) $(PROCESS_OBJ) $(PROCESS_OBJS)
+	@rm -f $(OBJS) $(LOADER_OBJ) $(PROCESS_OBJ)
 	@rm -rf bin

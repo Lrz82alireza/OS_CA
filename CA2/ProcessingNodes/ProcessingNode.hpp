@@ -6,16 +6,18 @@
 class ProcessingNode
 {
 private:
-    pid_t pid;
+    int id;
+    string pipePath;
 public:
     int run();
 
-    ProcessingNode(pid_t pid);
+    void listenAndCompute();
+    ProcessingNode(int id, string pipePath);
     ~ProcessingNode();
 };
 
-inline ProcessingNode::ProcessingNode(pid_t pid) :
-    pid(pid)
+inline ProcessingNode::ProcessingNode(int id, string pipePath) :
+    id(id), pipePath(pipePath)
 {
 }
 

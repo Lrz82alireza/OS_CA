@@ -27,6 +27,14 @@ using namespace std;
 
 #define NAMED_PIPE_PATH "../NP/pipe"
 
+#define LOADER_PROCESSOR_PIPE_PATH "./pipes/procinfo_pipe"
+
+struct ProcInfo {
+    pid_t pid;
+    long cpuUsage;
+    char pipePath[FIELD_SIZE];
+};
+
 struct ExtractedData
 {
     char title[FIELD_SIZE];

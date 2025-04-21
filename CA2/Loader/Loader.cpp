@@ -69,3 +69,31 @@ int Loader::receiveDataFromTransformer() {
 
     return 0;
 }
+
+int Loader::receiveProcInfoFromProcessing(const string &pipePath)
+{
+    int fd = open(pipePath.c_str(), O_RDONLY);
+    if (fd == -1) {
+        perror("open failed");
+        exit(1);
+    }
+
+    while (true) {
+        ProcInfo info;
+        ssize_t bytesRead = read(fd, &info, sizeof(ProcInfo));
+        if (bytesRead == -1) {
+            perror("read failed");
+            close(fd);
+            exit(1);
+        }
+        if (bytesRead == 0) break;
+
+        if (info.pid == -1 && strcmp(info.pipePath, "end") == 0) break;
+
+        procInfos.push_back(info);
+    }
+
+    close(fd);
+    return 0;
+}
+

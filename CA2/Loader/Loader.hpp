@@ -12,10 +12,12 @@ private:
     TransformerData minData;
     TransformerData maxData;
 
+    vector<ProcInfo> procInfos;
 
     void processMinMax(const TransformerData &item);
 public:
     int receiveDataFromTransformer();
+    int receiveProcInfoFromProcessing(const string &pipePath);
 
     Loader(const string &path);
     ~Loader();
