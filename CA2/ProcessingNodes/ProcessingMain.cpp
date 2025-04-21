@@ -83,6 +83,9 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < numProcesses; ++i) {
         string pipePath = "pipes/node_" + to_string(i);
         unlink(pipePath.c_str());
+        if (!std::filesystem::exists("pipes")) {
+            std::filesystem::create_directory("pipes");
+        }
         if (mkfifo(pipePath.c_str(), 0666) == -1) {
             perror("mkfifo failed");
             exit(EXIT_FAILURE);
@@ -121,17 +124,6 @@ int main(int argc, char* argv[]) {
 
     sendProcInfoToLoader(children, LoaderPipe);
     cout << "Sent sorted process info to Loader.\n";
-
-    // sleep(1); // کمی صبر کن که تموم شن
-
-    // wait for children to exit
-    for (int i = 0; i < numProcesses; ++i) {
-        wait(NULL);
-    }
-
-    for (const auto& c : children) {
-        unlink(c.pipePath);
-    }
 
     return 0;
 }

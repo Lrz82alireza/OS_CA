@@ -4,7 +4,7 @@ void ProcessingNode::listenAndCompute()
 {
     receiveDataFromLoader();
     computeScaledDataList();
-    
+    cout << "Node " << id << " has " << dataList.size() << " data items." << endl;
 }
 
 int ProcessingNode::receiveMinMaxFromLoader()
@@ -78,11 +78,22 @@ float ProcessingNode::computeCriterion(const TransformerData &scaledData)
 
 int ProcessingNode::receiveDataFromLoader()
 {
-    if (receiveMinMaxFromLoader() != 0) return -1;
-
+    cout << "NODE OPENED PATH: " << pipePath << endl;
     int fd = open(pipePath.c_str(), O_RDONLY);
     if (fd == -1) {
-        perror("open failed (data)");
+        perror(("open failed (data) for " + pipePath).c_str());
+        return -1;
+    }
+
+    if (read(fd, &minData, sizeof(TransformerData)) == -1) {
+        perror("read minData failed");
+        close(fd);
+        return -1;
+    }
+
+    if (read(fd, &maxData, sizeof(TransformerData)) == -1) {
+        perror("read maxData failed");
+        close(fd);
         return -1;
     }
 

@@ -36,8 +36,10 @@ int main()
 
     // chunk data
     loader.chunkData();
+    cout << "Chunked data." << endl;
 
     // send data to ProcessingNodes
+    sleep(1);
     loader.sendDataToProcessingNodes();
     cout << "Sent data to ProcessingNodes." << endl;
 
