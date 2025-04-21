@@ -9,9 +9,14 @@ private:
     
     string path;
     vector<TransformerData> dataList;
+    TransformerData minData;
+    TransformerData maxData;
 
-    int receiveDataFromTransformer();
+
+    void processMinMax(const TransformerData &item);
 public:
+    int receiveDataFromTransformer();
+
     Loader(const string &path);
     ~Loader();
 };

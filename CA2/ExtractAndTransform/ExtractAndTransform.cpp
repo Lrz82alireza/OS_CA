@@ -3,8 +3,6 @@
 
 #include "Shared.hpp"
 
-#define PROC_NUM 3
-
 const string PATH = "./assets/steamdb";
 
 int checkForkError(pid_t pid) {
@@ -37,6 +35,16 @@ int calltransformer(pid_t pid, int fd[2]){
         Transformer trans(pid, fd);
         trans.run();
         _exit(0);
+    }
+    return 0;
+}
+
+int callLoader(){
+    if (fork() == 0)
+    {
+        execl("./bin/Loader", "Loader", NULL);
+        perror("execl failed");
+        exit(EXIT_FAILURE);
     }
     return 0;
 }
