@@ -13,7 +13,7 @@ int main() {
     Output output(OUTPUT_PROCESSOR_PIPE_PATH, PROC_NUM);
     output.receiveDataFromProcessingNodes();
 
-    
+    output.makeOutputFile(GAME_RANKING_FILE_PATH);
 
     unlink(OUTPUT_PROCESSOR_PIPE_PATH);
 

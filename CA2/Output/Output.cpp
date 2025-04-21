@@ -38,3 +38,31 @@ int Output::receiveDataFromProcessingNodes()
     close(fd);
     return 0;
 }
+
+int Output::makeOutputFile(const string &filePath)
+{
+    sortDataList();
+    ofstream file(filePath);
+    if (!file.is_open()) {
+        perror("open failed (output)");
+        return -1;
+    }
+
+    // Header
+    file << "Title,Criterion" << endl;
+
+    // Data
+    for (const auto &item : dataList) {
+        file << "\"" << item.title << "\"," << item.criterion << endl;
+    }
+
+    file.close();
+    return 0;
+}
+
+void Output::sortDataList()
+{
+    std::sort(dataList.begin(), dataList.end(), [](const ScaledData &a, const ScaledData &b) {
+        return a.criterion > b.criterion; // Sort in descending order
+    });
+}

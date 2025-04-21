@@ -2,6 +2,8 @@
 #define OUTPUT_HPP
 #include "Shared.hpp"
 
+#define GAME_RANKING_FILE_PATH "./GameRanking.csv"
+
 class Output
 {
 private:
@@ -13,6 +15,9 @@ private:
 public:
 
     int receiveDataFromProcessingNodes();
+
+    int makeOutputFile(const string &filePath);
+    void sortDataList();
 
     Output(string pipePath, int numProcesses);
     ~Output();
