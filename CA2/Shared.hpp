@@ -29,6 +29,12 @@ using namespace std;
 
 #define LOADER_PROCESSOR_PIPE_PATH "./pipes/procinfo_pipe"
 
+struct ScaledData
+{
+    char title[FIELD_SIZE];
+    float criterion;
+};
+
 struct ProcInfo {
     pid_t pid;
     double cpuUsage;

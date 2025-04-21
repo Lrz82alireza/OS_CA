@@ -145,6 +145,13 @@ void Loader::sendDataToProcessingNode(const vector<TransformerData> &data, const
         }
     }
 
+    TransformerData endSignal;
+    strcpy(endSignal.title, "__END__");
+    if (write(fd, &endSignal, sizeof(TransformerData)) == -1) {
+        perror("write end signal failed");
+        exit(1);
+    }
+
     close(fd);
 }
 
