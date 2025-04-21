@@ -48,6 +48,13 @@ void printData(const ProcInfo &data)
     cout << "----------------------------------------" << endl;
 }
 
+void printData(const ScaledData &data)
+{
+    cout << "Title: " << data.title << endl;
+    cout << "Criterion: " << data.criterion << endl;
+    cout << "----------------------------------------" << endl;
+}
+
 void safeCopy(char* dest, const string& src) {
     if (src.size() == 0) {
         // cout << "src is empty" << endl;
@@ -71,5 +78,13 @@ void printDataList(const vector<ProcInfo> &procInfos)
     for (const auto& info : procInfos)
     {
         printData(info);
+    }
+}
+
+void printDataList(const vector<ScaledData>& dataList)
+{
+    for (const auto& data : dataList)
+    {
+        printData(data);
     }
 }

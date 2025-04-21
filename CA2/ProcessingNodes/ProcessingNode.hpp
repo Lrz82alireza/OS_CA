@@ -27,6 +27,8 @@ public:
     ScaledData computeScaledData(const TransformerData& data);
     float computeCriterion(const TransformerData& scaledData);
 
+    // Send data to Output
+    int sendDataToOutput(const string& pipePath);
 
     ProcessingNode(int id, string pipePath);
     ~ProcessingNode();

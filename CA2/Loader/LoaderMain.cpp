@@ -1,5 +1,18 @@
 #include "Loader.hpp"
 
+int callOutputMain() {
+    pid_t pid = fork();
+    if (pid == -1) {
+        perror("fork failed");
+        exit(EXIT_FAILURE);
+    }
+    if (pid == 0) {
+        execl("./bin/output", "output", NULL);
+        perror("execl for OutputMain failed");
+        exit(EXIT_FAILURE);
+    }
+    return pid;
+}
 
 int main()
 {
@@ -34,6 +47,9 @@ int main()
     loader.receiveProcInfoFromProcessing(LOADER_PROCESSOR_PIPE_PATH);
     unlink(LOADER_PROCESSOR_PIPE_PATH);
 
+    // exec OutputMain
+    pid_t pid_out = callOutputMain();
+    
     // chunk data
     loader.chunkData();
     cout << "Chunked data." << endl;
@@ -43,10 +59,12 @@ int main()
     loader.sendDataToProcessingNodes();
     cout << "Sent data to ProcessingNodes." << endl;
 
+
     // kill ProcessingNodes
     loader.killProcessingNodes();
 
     waitpid(pid, NULL, 0);
+    waitpid(pid_out, NULL, 0);
 
     return 0;
 }

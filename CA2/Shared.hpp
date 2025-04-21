@@ -28,6 +28,7 @@ using namespace std;
 #define NAMED_PIPE_PATH "./NP/pipe"
 
 #define LOADER_PROCESSOR_PIPE_PATH "./pipes/procinfo_pipe"
+#define OUTPUT_PROCESSOR_PIPE_PATH "./pipes/output_pipe"
 
 struct ScaledData
 {
@@ -84,8 +85,13 @@ string substr_(const char* src, int start, int length);
 void printData(const ExtractedData& data);
 void printData(const TransformerData& data);
 void printData(const ProcInfo& data);
-void safeCopy(char* dest, const string& src);
+void printData(const ScaledData& data);
+
 void printDataList(const vector<TransformerData>& dataList);
 void printDataList(const vector<ProcInfo>& procInfos);
+void printDataList(const vector<ScaledData>& dataList);
+
+void safeCopy(char* dest, const string& src);
+
 
 #endif // SHARED_HPP

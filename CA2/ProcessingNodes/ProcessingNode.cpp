@@ -5,6 +5,38 @@ void ProcessingNode::listenAndCompute()
     receiveDataFromLoader();
     computeScaledDataList();
     cout << "Node " << id << " has " << dataList.size() << " data items." << endl;
+
+    // end
+    sendDataToOutput(OUTPUT_PROCESSOR_PIPE_PATH);
+}
+
+int ProcessingNode::sendDataToOutput(const string& pipePath_)
+{
+    int fd = open(pipePath_.c_str(), O_WRONLY);
+    if (fd == -1) {
+        perror("open failed (output)");
+        return -1;
+    }
+    cout << "NODE " << id << " OPENED PATH: " << pipePath_  << "TO OUTPUT" << endl;
+
+    for (const auto &item : scaledDataList) {
+        if (write(fd, &item, sizeof(ScaledData)) == -1) {
+            perror("write scaledData failed");
+            close(fd);
+            return -1;
+        }
+    }
+
+    ScaledData endSignal{};
+    strcpy(endSignal.title, "__END__");
+    if (write(fd, &endSignal, sizeof(ScaledData)) == -1) {
+        perror("write end signal failed");
+        close(fd);
+        return -1;
+    }
+
+    close(fd);
+    return 0;
 }
 
 int ProcessingNode::receiveMinMaxFromLoader()

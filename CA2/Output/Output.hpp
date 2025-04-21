@@ -5,17 +5,25 @@
 class Output
 {
 private:
-    /* data */
+    string pipePath;
+    int numProcesses;
+
+    vector<ScaledData> dataList; // <title, criterion>
+
 public:
-    Output(/* args */);
+
+    int receiveDataFromProcessingNodes();
+
+    Output(string pipePath, int numProcesses);
     ~Output();
 };
 
-Output::Output(/* args */)
+inline Output::Output(string pipePath, int numProcesses) : pipePath(pipePath) 
 {
+    this->numProcesses = numProcesses;
 }
 
-Output::~Output()
+inline Output::~Output()
 {
 }
 
