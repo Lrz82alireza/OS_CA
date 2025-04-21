@@ -11,11 +11,9 @@ int Transformer::run()
 int Transformer::sendDataToLoader(const std::vector<TransformerData>& dataList)
 {
     printf("Sending data to loader...\n");
-    // cout << "Data size: " << dataList.size() << endl;
-
     close(fd[READ_END]);
 
-    int fd = open(NAMED_PIPE_PATH, O_WRONLY | O_NONBLOCK);
+    int fd = open(NAMED_PIPE_PATH, O_WRONLY); 
     if (fd == -1)
     {
         perror("open named pipe failed");
@@ -126,29 +124,40 @@ float Transformer::priceToPercent(float price, float discount)
     return result;
 }
 
+ssize_t readFull(int fd, void* buffer, size_t size) {
+    size_t total = 0;
+    char* buf = reinterpret_cast<char*>(buffer);
+    while (total < size) {
+        ssize_t r = read(fd, buf + total, size - total);
+        if (r == -1) {
+            perror("read");
+            exit(EXIT_FAILURE);
+        } else if (r == 0) {
+            break; // EOF
+        }
+        total += r;
+    }
+    return total;
+}
+
 std::vector<ExtractedData> Transformer::readDataFromExtractor() {
     std::vector<ExtractedData> dataList;
     ExtractedData item;
 
     while (true) {
-        ssize_t r = read(fd[READ_END], &item, sizeof(ExtractedData));
-        if (r == -1) {
-            perror("read");
+        ssize_t r = readFull(fd[READ_END], &item, sizeof(ExtractedData));
+        if (r == 0) {
+            break; // EOF
+        } else if (r != sizeof(ExtractedData)) {
+            std::cerr << "Partial read! Expected " << sizeof(ExtractedData)
+                      << ", got " << r << std::endl;
             exit(EXIT_FAILURE);
-        }
-        if (r == 0) break;
-
-        if (strncmp(item.title, "__END__", FIELD_SIZE) == 0)
-        {
-            cout << "Break __END__, Size = " << dataList.size() << endl;
-            break;
         }
 
         dataList.push_back(item);
     }
 
     close(fd[READ_END]);
-
-    cout << "Data recieved from extractor size: " << dataList.size() << endl;
+    cout << "Received size: " << dataList.size() << endl;
     return dataList;
 }

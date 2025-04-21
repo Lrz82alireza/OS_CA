@@ -18,11 +18,12 @@ void Loader::processMinMax(const TransformerData &item)
     maxData.allReviewsNumber = max(maxData.allReviewsNumber, item.allReviewsNumber);
 }
 
-int Loader::receiveDataFromTransformer()
-{
+int Loader::receiveDataFromTransformer() {
     int flag = 0;
     int fd = open(NAMED_PIPE_PATH, O_RDONLY);
-    if (fd == -1) {
+    int dummy_fd = open(NAMED_PIPE_PATH, O_WRONLY); // جلوگیری از EOF زودرس
+
+    if (fd == -1 || dummy_fd == -1) {
         perror("open failed");
         exit(EXIT_FAILURE);
     }
@@ -37,19 +38,14 @@ int Loader::receiveDataFromTransformer()
             break;
         }
 
-        if (r == 0) break; // EOF - no more writers
+        if (r == 0) break;
 
-        if (strncmp(item.title, "__END__", FIELD_SIZE) == 0)
-        {
+        if (strncmp(item.title, "__END__", FIELD_SIZE) == 0) {
             endCounter++;
-            if (endCounter == PROC_NUM) {
-                cout << "All data received." << endl;
-                break;
-            }
+            if (endCounter == PROC_NUM) break;
             continue;
         }
 
-        // process min and max
         if (flag == 0) {
             minData = item;
             maxData = item;
@@ -62,13 +58,14 @@ int Loader::receiveDataFromTransformer()
     }
 
     close(fd);
+    close(dummy_fd);
 
-    cout << "------------------END------------------" << endl;
-    // printDataList(dataList);
-    cout << "Min Data:" << endl;
+    // Print min and max data
+    cout << "----------------END----------------" << endl;
+    safeCopy(minData.title, "Min Data");
+    safeCopy(maxData.title, "Max Data");
     printData(minData);
-    cout << "Max Data:" << endl;
     printData(maxData);
-    cout << "Data List Size: " << dataList.size() << endl;
+
     return 0;
 }

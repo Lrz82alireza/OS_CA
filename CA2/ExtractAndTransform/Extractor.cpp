@@ -57,37 +57,14 @@ vector<ExtractedData> Extractor::extract(string path)
 }
 
 int Extractor::sendDataToTransformer(const std::vector<ExtractedData>& dataList) {
-    cout << path << " -> has size: " << dataList.size() << endl;
+    cout << path << " -> sending size: " << dataList.size() << endl;
 
     for (const auto& item : dataList) {
-        if (strcmp(item.title, "") == 0) {
-            continue; // Skip empty items
-        }
-        if (write(fd[WRITE_END], &item, sizeof(ExtractedData)) == -1) {
-            perror("write");
+        ssize_t written = write(fd[WRITE_END], &item, sizeof(ExtractedData));
+        if (written != sizeof(ExtractedData)) {
+            perror("write failed");
             exit(EXIT_FAILURE);
         }
-    }
-
-    ExtractedData endMarker = {.title = "", 
-                               .originalPrice = "",
-                               .discountedPrice = "",
-                               .link = "",
-                               .gameDescription = "",
-                               .recentReviewsSummary = "",
-                               .allReviewsSummary = "",
-                               .recentReviewsNumber = "",
-                               .allReviewsNumber = "",
-                               .developer = "",
-                               .publisher = "",
-                               .popularTags = "",
-                               .gameFeatures = "",
-                               .minimumRequirements = ""};
-    strncpy(endMarker.title, "__END__", FIELD_SIZE - 1);
-    // printData(endMarker);
-    if (write(fd[WRITE_END], &endMarker, sizeof(ExtractedData)) == -1) {
-        perror("write");
-        exit(EXIT_FAILURE);
     }
 
     close(fd[WRITE_END]);
