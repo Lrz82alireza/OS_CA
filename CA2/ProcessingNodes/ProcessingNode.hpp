@@ -39,7 +39,7 @@ inline ProcessingNode::ProcessingNode(int id, string pipePath) :
 
 inline ProcessingNode::~ProcessingNode()
 {
-    
+    _exit(0);
 }
 
 #endif // PROCESSINGNODE_HPP

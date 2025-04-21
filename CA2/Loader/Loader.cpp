@@ -175,3 +175,11 @@ void Loader::sendMinMaxToProcessingNode(const TransformerData &minData, const Tr
 
     close(fd);
 }
+
+void Loader::killProcessingNodes()
+{
+    for (const auto &info : procInfos) {
+        waitpid(info.pid, nullptr, 0);
+        unlink(info.pipePath);
+    }
+}

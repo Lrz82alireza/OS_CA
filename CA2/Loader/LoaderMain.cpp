@@ -41,6 +41,9 @@ int main()
     loader.sendDataToProcessingNodes();
     cout << "Sent data to ProcessingNodes." << endl;
 
+    // kill ProcessingNodes
+    loader.killProcessingNodes();
+
     waitpid(pid, NULL, 0);
 
     return 0;

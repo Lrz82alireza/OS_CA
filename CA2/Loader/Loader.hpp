@@ -26,6 +26,8 @@ public:
     void sendDataToProcessingNode(const vector<TransformerData> &data, const string &pipePath);
     void sendMinMaxToProcessingNode(const TransformerData &minData, const TransformerData &maxData, const string &pipePath);
 
+    void killProcessingNodes();
+    
     Loader(const string &path);
     ~Loader();
 };
