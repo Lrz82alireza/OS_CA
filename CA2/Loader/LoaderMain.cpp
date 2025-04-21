@@ -9,7 +9,8 @@ int main()
     unlink(NAMED_PIPE_PATH);
 
     // get ProcInfos from Processing
-    mkdir("../pipes", 0777);
+    cout << "Creating pipes..." << endl;
+    mkdir("./pipes", 0777);
 
     unlink(LOADER_PROCESSOR_PIPE_PATH);
     if (mkfifo(LOADER_PROCESSOR_PIPE_PATH, 0666) == -1) {
@@ -34,10 +35,13 @@ int main()
     unlink(LOADER_PROCESSOR_PIPE_PATH);
 
     // chunk data
+    loader.chunkData();
 
     // send data to ProcessingNodes
+    loader.sendDataToProcessingNodes();
+    cout << "Sent data to ProcessingNodes." << endl;
 
-    wait(NULL);
+    waitpid(pid, NULL, 0);
 
     return 0;
 }

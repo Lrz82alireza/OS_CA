@@ -25,13 +25,13 @@ using namespace std;
 
 #define FIELD_SIZE 1024
 
-#define NAMED_PIPE_PATH "../NP/pipe"
+#define NAMED_PIPE_PATH "./NP/pipe"
 
 #define LOADER_PROCESSOR_PIPE_PATH "./pipes/procinfo_pipe"
 
 struct ProcInfo {
     pid_t pid;
-    long cpuUsage;
+    double cpuUsage;
     char pipePath[FIELD_SIZE];
 };
 
@@ -77,7 +77,9 @@ inline map<string, int> ReviewsSummaryMap = {
 string substr_(const char* src, int start, int length);
 void printData(const ExtractedData& data);
 void printData(const TransformerData& data);
+void printData(const ProcInfo& data);
 void safeCopy(char* dest, const string& src);
 void printDataList(const vector<TransformerData>& dataList);
+void printDataList(const vector<ProcInfo>& procInfos);
 
 #endif // SHARED_HPP

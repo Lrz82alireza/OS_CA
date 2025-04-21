@@ -40,6 +40,14 @@ void printData(const TransformerData &data)
     cout << "----------------------------------------" << endl;
 }
 
+void printData(const ProcInfo &data)
+{
+    cout << "PID: " << data.pid << endl;
+    cout << "CPU Usage: " << data.cpuUsage << endl;
+    cout << "Pipe Path: " << data.pipePath << endl;
+    cout << "----------------------------------------" << endl;
+}
+
 void safeCopy(char* dest, const string& src) {
     if (src.size() == 0) {
         // cout << "src is empty" << endl;
@@ -55,5 +63,13 @@ void printDataList(const vector<TransformerData>& dataList)
     for (const auto& data : dataList)
     {
         printData(data);
+    }
+}
+
+void printDataList(const vector<ProcInfo> &procInfos)
+{
+    for (const auto& info : procInfos)
+    {
+        printData(info);
     }
 }

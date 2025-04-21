@@ -1,6 +1,8 @@
 #include "ProcessingNode.hpp"
 #include "Shared.hpp"
 #include <filesystem>
+#include <thread>
+#include <csignal>
 
 int sendProcInfoToLoader(const vector<ProcInfo>& children, const string& LoaderPipe) {
     int fd = open(LoaderPipe.c_str(), O_WRONLY);
@@ -10,8 +12,7 @@ int sendProcInfoToLoader(const vector<ProcInfo>& children, const string& LoaderP
     }
 
     for (const auto& c : children) {
-        ProcInfo info = c;
-        if (write(fd, &info, sizeof(ProcInfo)) == -1) {
+        if (write(fd, &c, sizeof(ProcInfo)) == -1) {
             perror("write failed");
             exit(1);
         }
@@ -41,15 +42,41 @@ long getCpuUsage(pid_t pid) {
     return utime + stime;
 }
 
+long getTotalCPUTime() {
+    std::ifstream file("/proc/stat");
+    string line;
+    std::getline(file, line);
+    std::istringstream iss(line);
+    string cpu;
+    long val, total = 0;
+    iss >> cpu; // skip "cpu"
+    while (iss >> val) total += val;
+    return total;
+}
+
+double getCpuUsagePercent(pid_t pid) {
+    long p1 = getCpuUsage(pid);
+    long t1 = getTotalCPUTime();
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    long p2 = getCpuUsage(pid);
+    long t2 = getTotalCPUTime();
+    
+    long deltaP = p2 - p1;
+    long deltaT = t2 - t1;
+    if (deltaT == 0) return 0.0;
+    return 100.0 * deltaP / deltaT;
+}
+
 int main(int argc, char* argv[]) {
     if (argc != 3) {
-        cerr << "Usage: " << argv[0] << " <num_processes>\n";
+        cerr << "Usage: " << argv[0] << " <num_processes> <loader_pipe>\n";
         return 1;
     }
 
     int numProcesses = stoi(argv[1]);
     string LoaderPipe = argv[2];
     vector<ProcInfo> children;
+    vector<pid_t> childPIDs;
 
     std::filesystem::create_directory("pipes");
 
@@ -72,8 +99,9 @@ int main(int argc, char* argv[]) {
             node.listenAndCompute();
             _exit(0);
         } else {
-            sleep(1);
-            long usage = getCpuUsage(pid);
+            childPIDs.push_back(pid);
+            sleep(1); // wait for child to start
+            double usage = getCpuUsagePercent(pid);
             ProcInfo info;
             info.pid = pid;
             info.cpuUsage = usage;
@@ -87,16 +115,22 @@ int main(int argc, char* argv[]) {
     });
 
     cout << "Sorted child processes by CPU usage:\n";
-    for (const auto& c : children) {
-        cout << "PID: " << c.pid << " - CPU Time: " << c.cpuUsage << " - Pipe: " << c.pipePath << endl;
-    }
+    // for (const auto& c : children) {
+    //     cout << "PID: " << c.pid << " - CPU Usage: " << c.cpuUsage << " - Pipe: " << c.pipePath << endl;
+    // }
 
-    // send Sorted ProcInfo to Loader
     sendProcInfoToLoader(children, LoaderPipe);
     cout << "Sent sorted process info to Loader.\n";
 
+    // sleep(1); // کمی صبر کن که تموم شن
+
+    // wait for children to exit
     for (int i = 0; i < numProcesses; ++i) {
         wait(NULL);
+    }
+
+    for (const auto& c : children) {
+        unlink(c.pipePath);
     }
 
     return 0;

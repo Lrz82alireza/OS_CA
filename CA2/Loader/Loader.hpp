@@ -12,12 +12,19 @@ private:
     TransformerData minData;
     TransformerData maxData;
 
+    vector<vector<TransformerData>> chunkedData;
+
     vector<ProcInfo> procInfos;
 
     void processMinMax(const TransformerData &item);
 public:
     int receiveDataFromTransformer();
     int receiveProcInfoFromProcessing(const string &pipePath);
+
+    void chunkData();
+    void sendDataToProcessingNodes();
+    void sendDataToProcessingNode(const vector<TransformerData> &data, const string &pipePath);
+    void sendMinMaxToProcessingNode(const TransformerData &minData, const TransformerData &maxData, const string &pipePath);
 
     Loader(const string &path);
     ~Loader();

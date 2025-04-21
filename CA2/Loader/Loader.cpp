@@ -93,7 +93,78 @@ int Loader::receiveProcInfoFromProcessing(const string &pipePath)
         procInfos.push_back(info);
     }
 
+    // check
+    cout << "----------------CHECK-PROC----------------" << endl;
+    printDataList(procInfos);
+
     close(fd);
     return 0;
 }
 
+void Loader::chunkData()
+{
+    int chunkSize = dataList.size() / PROC_NUM;
+    int remaining = dataList.size() % PROC_NUM;
+    int start = 0;
+    for (int i = 0; i < PROC_NUM; i++) {
+        chunkedData.push_back(vector<TransformerData>());
+        for (int j = 0; j < chunkSize; j++) {
+            chunkedData[i].push_back(dataList[start]);
+            start++;
+        }
+        if (remaining > 0) {
+            chunkedData[i].push_back(dataList[start]);
+            start++;
+            remaining--;
+        }
+    }
+}
+
+void Loader::sendDataToProcessingNodes()
+{
+    for (int i = 0; i < PROC_NUM; i++) {
+        sendDataToProcessingNode(chunkedData[i], procInfos[i].pipePath);
+    }
+}
+
+void Loader::sendDataToProcessingNode(const vector<TransformerData> &data, const string &pipePath)
+{
+    int fd = open(pipePath.c_str(), O_WRONLY);
+    if (fd == -1) {
+        perror("open failed");
+        exit(1);
+    }
+
+    // send min and max data
+    sendMinMaxToProcessingNode(minData, maxData, pipePath);
+
+    for (const auto &item : data) {
+        if (write(fd, &item, sizeof(TransformerData)) == -1) {
+            perror("write failed");
+            exit(1);
+        }
+    }
+
+    close(fd);
+}
+
+void Loader::sendMinMaxToProcessingNode(const TransformerData &minData, const TransformerData &maxData, const string &pipePath)
+{
+    int fd = open(pipePath.c_str(), O_WRONLY);
+    if (fd == -1) {
+        perror("open failed");
+        exit(1);
+    }
+
+    if (write(fd, &minData, sizeof(TransformerData)) == -1) {
+        perror("write min data failed");
+        exit(1);
+    }
+
+    if (write(fd, &maxData, sizeof(TransformerData)) == -1) {
+        perror("write max data failed");
+        exit(1);
+    }
+
+    close(fd);
+}

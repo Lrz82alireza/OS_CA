@@ -1,24 +1,26 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -g -O2 -fsanitize=address -fno-omit-frame-pointer -I.
 
+# Binaries
 TARGET = bin/run
 LOADER_BIN = bin/loader
 PROCESS_BIN = bin/processor
 
-# Gather all .cpp files except LoaderMain and ProcessingMain
-SRCS := $(filter-out ./Loader/LoaderMain.cpp ./ProcessingNodes/ProcessingMain.cpp, $(shell find . -name "*.cpp"))
-OBJS := $(SRCS:.cpp=.o)
+# Sources
+ALL_SRCS := $(shell find . -name "*.cpp")
+RUN_MAIN := ./ExtractAndTransform/ExtractAndTransform.cpp
+LOADER_MAIN := ./Loader/LoaderMain.cpp
+PROCESSOR_MAIN := ./ProcessingNodes/ProcessingMain.cpp
 
-# Loader
-LOADER_SRC = Loader/LoaderMain.cpp
-LOADER_OBJ = Loader/LoaderMain.o
-LOADER_OBJS = $(LOADER_OBJ)
+# Filtered sources for each binary
+COMMON_SRCS := $(filter-out $(RUN_MAIN) $(LOADER_MAIN) $(PROCESSOR_MAIN), $(ALL_SRCS))
+COMMON_OBJS := $(COMMON_SRCS:.cpp=.o)
 
-# Processor
-PROCESS_SRC = ProcessingNodes/ProcessingMain.cpp
-PROCESS_OBJ = ProcessingNodes/ProcessingMain.o
-PROCESS_OBJS = $(PROCESS_OBJ)
+RUN_OBJ := $(RUN_MAIN:.cpp=.o)
+LOADER_OBJ := $(LOADER_MAIN:.cpp=.o)
+PROCESSOR_OBJ := $(PROCESSOR_MAIN:.cpp=.o)
 
+# Colors
 COLOR_GREEN = \033[0;32m
 COLOR_YELLOW = \033[1;33m
 COLOR_RED = \033[0;31m
@@ -26,19 +28,19 @@ COLOR_RESET = \033[0m
 
 all: $(TARGET) $(LOADER_BIN) $(PROCESS_BIN)
 
-$(TARGET): $(OBJS)
+$(TARGET): $(COMMON_OBJS) $(RUN_OBJ)
 	@mkdir -p bin
 	@printf "$(COLOR_YELLOW)🔧 Linking run...$(COLOR_RESET)\n"
 	$(CXX) $(CXXFLAGS) -o $@ $^
 	@printf "$(COLOR_GREEN)✅ Built: $(TARGET)$(COLOR_RESET)\n"
 
-$(LOADER_BIN): $(OBJS) $(LOADER_OBJS)
+$(LOADER_BIN): $(COMMON_OBJS) $(LOADER_OBJ)
 	@mkdir -p bin
 	@printf "$(COLOR_YELLOW)🔧 Linking loader...$(COLOR_RESET)\n"
 	$(CXX) $(CXXFLAGS) -o $@ $^
 	@printf "$(COLOR_GREEN)✅ Built: $(LOADER_BIN)$(COLOR_RESET)\n"
 
-$(PROCESS_BIN): $(OBJS) $(PROCESS_OBJS)
+$(PROCESS_BIN): $(COMMON_OBJS) $(PROCESSOR_OBJ)
 	@mkdir -p bin
 	@printf "$(COLOR_YELLOW)🔧 Linking processor...$(COLOR_RESET)\n"
 	$(CXX) $(CXXFLAGS) -o $@ $^
@@ -62,5 +64,5 @@ run-processor: all
 
 clean:
 	@printf "$(COLOR_YELLOW)🪹 Cleaning...$(COLOR_RESET)\n"
-	@rm -f $(OBJS) $(LOADER_OBJ) $(PROCESS_OBJ)
+	@rm -f $(COMMON_OBJS) $(RUN_OBJ) $(LOADER_OBJ) $(PROCESSOR_OBJ)
 	@rm -rf bin
