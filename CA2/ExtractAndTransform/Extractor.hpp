@@ -8,6 +8,7 @@ class Extractor
 private:
     pid_t pid;
     int fd[2];
+    string path;
 
     ExtractedData extractLine(const string& line);
 public:

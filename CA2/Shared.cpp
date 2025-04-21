@@ -41,6 +41,11 @@ void printData(const TransformerData &data)
 }
 
 void safeCopy(char* dest, const string& src) {
+    if (src.size() == 0) {
+        // cout << "src is empty" << endl;
+        throw std::invalid_argument("Title is empty");
+        return;
+    }
     strncpy(dest, src.c_str(), FIELD_SIZE - 1);
     dest[FIELD_SIZE - 1] = '\0';
 }

@@ -36,6 +36,7 @@ ExtractedData Extractor::extractLine(const string& line)
 vector<ExtractedData> Extractor::extract(string path)
 {
     vector<ExtractedData> dataList;
+    this->path = path;
     
     // Open the CSV file
     ifstream file(path);
@@ -56,17 +57,34 @@ vector<ExtractedData> Extractor::extract(string path)
 }
 
 int Extractor::sendDataToTransformer(const std::vector<ExtractedData>& dataList) {
-    close(fd[READ_END]);
+    cout << path << " -> has size: " << dataList.size() << endl;
 
     for (const auto& item : dataList) {
+        if (strcmp(item.title, "") == 0) {
+            continue; // Skip empty items
+        }
         if (write(fd[WRITE_END], &item, sizeof(ExtractedData)) == -1) {
             perror("write");
             exit(EXIT_FAILURE);
         }
     }
 
-    ExtractedData endMarker = {};
+    ExtractedData endMarker = {.title = "", 
+                               .originalPrice = "",
+                               .discountedPrice = "",
+                               .link = "",
+                               .gameDescription = "",
+                               .recentReviewsSummary = "",
+                               .allReviewsSummary = "",
+                               .recentReviewsNumber = "",
+                               .allReviewsNumber = "",
+                               .developer = "",
+                               .publisher = "",
+                               .popularTags = "",
+                               .gameFeatures = "",
+                               .minimumRequirements = ""};
     strncpy(endMarker.title, "__END__", FIELD_SIZE - 1);
+    // printData(endMarker);
     if (write(fd[WRITE_END], &endMarker, sizeof(ExtractedData)) == -1) {
         perror("write");
         exit(EXIT_FAILURE);

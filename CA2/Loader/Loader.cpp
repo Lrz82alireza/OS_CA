@@ -63,7 +63,8 @@ int Loader::receiveDataFromTransformer()
 
     close(fd);
 
-    printDataList(dataList);
+    cout << "------------------END------------------" << endl;
+    // printDataList(dataList);
     cout << "Min Data:" << endl;
     printData(minData);
     cout << "Max Data:" << endl;

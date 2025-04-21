@@ -4,18 +4,21 @@ int Transformer::run()
 {
     transformedDataList = this->transform(this->readDataFromExtractor());
     // printDataList(this->transformedDataList);
-    // this->sendDataToLoader(this->transformedDataList);
+    this->sendDataToLoader(this->transformedDataList);
     return 0;
 }
 
 int Transformer::sendDataToLoader(const std::vector<TransformerData>& dataList)
 {
     printf("Sending data to loader...\n");
+    // cout << "Data size: " << dataList.size() << endl;
+
+    close(fd[READ_END]);
 
     int fd = open(NAMED_PIPE_PATH, O_WRONLY | O_NONBLOCK);
     if (fd == -1)
     {
-        perror("open failed");
+        perror("open named pipe failed");
         exit(EXIT_FAILURE);
     }
 
@@ -58,8 +61,8 @@ vector<TransformerData> Transformer::transform(const vector<ExtractedData>& data
         }
         catch(const std::exception& e)
         {
-            printData(data);
-            std::cout << "Here in " << e.what() << '\n';
+            // printData(data);
+            // std::cout << "Here in " << e.what() << '\n';
         }
         
     }
@@ -124,8 +127,6 @@ float Transformer::priceToPercent(float price, float discount)
 }
 
 std::vector<ExtractedData> Transformer::readDataFromExtractor() {
-    close(fd[WRITE_END]);
-
     std::vector<ExtractedData> dataList;
     ExtractedData item;
 
@@ -137,11 +138,17 @@ std::vector<ExtractedData> Transformer::readDataFromExtractor() {
         }
         if (r == 0) break;
 
-        if (strncmp(item.title, "__END__", FIELD_SIZE) == 0) break;
+        if (strncmp(item.title, "__END__", FIELD_SIZE) == 0)
+        {
+            cout << "Break __END__, Size = " << dataList.size() << endl;
+            break;
+        }
 
         dataList.push_back(item);
     }
 
     close(fd[READ_END]);
+
+    cout << "Data recieved from extractor size: " << dataList.size() << endl;
     return dataList;
 }

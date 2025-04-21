@@ -28,6 +28,7 @@ inline Loader::Loader(const string &path) : path(path)
 
 inline Loader::~Loader()
 {
+    _exit(0);
 }
 
 #endif // LOADER_HPP
