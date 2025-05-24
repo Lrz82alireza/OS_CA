@@ -12,44 +12,64 @@ std::vector<Hidden_Node> hidden_layer(HIDDEN_SIZE);
 std::vector<Output_Node> output_layer(OUTPUT_SIZE);
 
 void loadHiddenLayerParams(const std::string& weightsFile, const std::string& biasFile) {
-    std::ifstream wfile(weightsFile);
-    std::ifstream bfile(biasFile);
+    std::ifstream weights(weightsFile);
+    std::ifstream biases(biasFile);
 
-    if (!wfile || !bfile) {
+    if (!weights || !biases) {
         std::cerr << "Failed to open hidden layer param files\n";
-        exit(1);
+        std::exit(1);
     }
 
-    for (int i = 0; i < HIDDEN_SIZE; ++i) {
-        for (int j = 0; j < INPUT_SIZE; ++j) {
-            wfile >> hidden_layer[i].weights[j];
-        }
-    }
+    int idx = 0;
+    std::string line;
 
-    for (int i = 0; i < HIDDEN_SIZE; ++i) {
-        bfile >> hidden_layer[i].bias;
+    while (std::getline(weights, line) && idx < HIDDEN_SIZE) {
+        std::stringstream ss(line);
+        for (int j = 0; j < INPUT_SIZE; ++j)
+            ss >> hidden_layer[idx].weights[j];
+        idx++;
     }
+    weights.close();
+
+    idx = 0;
+    while (std::getline(biases, line) && idx < HIDDEN_SIZE) {
+        std::stringstream ss(line);
+        ss >> hidden_layer[idx].bias;
+        idx++;
+    }
+    biases.close();
 }
 
 void loadOutputLayerParams(const std::string& weightsFile, const std::string& biasFile) {
-    std::ifstream wfile(weightsFile);
-    std::ifstream bfile(biasFile);
+    std::ifstream weights(weightsFile);
+    std::ifstream biases(biasFile);
 
-    if (!wfile || !bfile) {
+    if (!weights || !biases) {
         std::cerr << "Failed to open output layer param files\n";
-        exit(1);
+        std::exit(1);
     }
 
-    for (int i = 0; i < OUTPUT_SIZE; ++i) {
-        for (int j = 0; j < HIDDEN_SIZE; ++j) {
-            wfile >> output_layer[i].weights[j];
-        }
-    }
+    int idx = 0;
+    std::string line;
 
-    for (int i = 0; i < OUTPUT_SIZE; ++i) {
-        bfile >> output_layer[i].bias;
+    while (std::getline(weights, line) && idx < OUTPUT_SIZE) {
+        std::stringstream ss(line);
+        for (int j = 0; j < HIDDEN_SIZE; ++j)
+            ss >> output_layer[idx].weights[j];
+        idx++;
     }
+    weights.close();
+
+    idx = 0;
+    while (std::getline(biases, line) && idx < OUTPUT_SIZE) {
+        std::stringstream ss(line);
+        ss >> output_layer[idx].bias;
+        idx++;
+    }
+    biases.close();
 }
+
+
 
 double relu(double x) {
     return x > 0 ? x : 0;

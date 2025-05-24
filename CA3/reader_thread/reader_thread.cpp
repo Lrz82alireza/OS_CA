@@ -6,7 +6,7 @@ void reader_thread(SharedQueue<std::pair<MNIST_Image, MNIST_Label>>& q) {
     MNIST_Image img;
     MNIST_Label lbl;
 
-    for (int i = 0; i < 10000; ++i) {
+    for (int i = 0; i < TOTAL_IMAGES; ++i) {
         if (!loader.getNext(img, lbl)) break;
         q.push(std::make_pair(img, lbl));
     }

@@ -12,6 +12,19 @@
 constexpr int NUM_THREADS = 8;
 constexpr int NEURONS_PER_JOB = 32;
 
+void printProgress(int current, int total, int barWidth = 40) {
+    float progress = float(current) / total;
+    int pos = barWidth * progress;
+
+    std::cout << "\r[";
+    for (int i = 0; i < barWidth; ++i) {
+        if (i < pos) std::cout << "█";
+        else std::cout << "-";
+    }
+    std::cout << "] " << current << " / " << total << " (" << int(progress * 100.0) << "%)";
+    std::cout.flush();
+}
+
 double process_dataset(
     ThreadPool& pool,
     SharedQueue<std::pair<MNIST_Image, MNIST_Label>>& input_queue,
@@ -31,11 +44,20 @@ double process_dataset(
         barrier.wait();
         enqueue_output_jobs(pool);
 
+        
         int prediction = predict();
-        if (prediction == lbl)
-            correct++;
+        bool is_correct = (prediction == lbl);
+        if (is_correct) correct++;
+        
+        std::cout << "\n[Image #" << total << "] "
+                  << "Prediction: " << prediction
+                  << " | Actual: " << (int)lbl
+                  << " --> " << (is_correct ? "✅ Correct" : "❌ Incorrect") << std::endl;
+        
+        printProgress(total, TOTAL_IMAGES);        
     }
 
+    std::cout << std::endl; // خط جدید بعد از progress bar
     return 100.0 * correct / total;
 }
 
