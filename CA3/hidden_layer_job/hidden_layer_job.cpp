@@ -19,6 +19,7 @@ void enqueue_hidden_jobs(
                 sum += hidden_layer[n].bias;
                 hidden_layer[n].output = relu(sum);
             }
+            barrier.arrive();
         });
     }
 }

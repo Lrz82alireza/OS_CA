@@ -17,10 +17,11 @@ SRC_DIRS := \
     neural_net \
     reader_thread \
     shared_queue \
-    data_loader
+    data_loader \
+    barrier
+
 
 INCLUDE_DIRS := $(foreach dir,$(SRC_DIRS),-I$(dir))
-
 CXXFLAGS := -std=c++17 -Wall -Wextra -O2 -pthread $(INCLUDE_DIRS)
 
 SRCS := main.cpp $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))

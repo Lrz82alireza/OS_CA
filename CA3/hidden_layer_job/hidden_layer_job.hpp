@@ -4,6 +4,7 @@
 #include "shared_queue.hpp"
 #include "neural_net.hpp"
 #include "thread_pool.hpp"
+#include "barrier.hpp"
 #include <data_loader.hpp>
 
 void enqueue_hidden_jobs(
