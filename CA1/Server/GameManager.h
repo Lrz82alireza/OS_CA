@@ -23,7 +23,7 @@
 #define NEXT_TURN 10
 #define IN_TURN 2
 
-#define TIME_LIMIT 30
+#define TIME_LIMIT 120
 
 #define MAX_STATE 3
 

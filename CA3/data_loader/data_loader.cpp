@@ -23,13 +23,15 @@ uint32_t DataLoader::flipBytes(uint32_t n) {
 
 void DataLoader::readImageFileHeader() {
     MNIST_ImageFileHeader header;
-    fread(&header, sizeof(header), 1, imageFile);
+    size_t check = fread(&header, sizeof(header), 1, imageFile);
+    (void)check;
     header.magicNumber = flipBytes(header.magicNumber);
 }
 
 void DataLoader::readLabelFileHeader() {
     MNIST_LabelFileHeader header;
-    fread(&header, sizeof(header), 1, labelFile);
+    size_t check = fread(&header, sizeof(header), 1, labelFile);
+    (void)check;
     header.magicNumber = flipBytes(header.magicNumber);
 }
 
