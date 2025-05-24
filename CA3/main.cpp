@@ -12,6 +12,19 @@
 constexpr int NUM_THREADS = 8;
 constexpr int NEURONS_PER_JOB = 32;
 
+void printProgress(int current, int total, int barWidth = 40) {
+    float progress = float(current) / total;
+    int pos = barWidth * progress;
+
+    std::cout << "\r[";
+    for (int i = 0; i < barWidth; ++i) {
+        if (i < pos) std::cout << "█";
+        else std::cout << "-";
+    }
+    std::cout << "] " << current << " / " << total << " (" << int(progress * 100.0) << "%)";
+    std::cout.flush();
+}
+
 double process_dataset(
     ThreadPool& pool,
     SharedQueue<std::pair<MNIST_Image, MNIST_Label>>& input_queue,
@@ -27,20 +40,23 @@ double process_dataset(
         int expected_hidden_jobs = (HIDDEN_SIZE + neurons_per_job - 1) / neurons_per_job;
         barrier.init(expected_hidden_jobs);
 
-        enqueue_hidden_jobs(pool, img, HIDDEN_SIZE, neurons_per_job);
-        barrier.wait();
+        enqueue_all_hidden_layers(pool, img, NEURONS_PER_JOB);
         enqueue_output_jobs(pool);
 
         int prediction = predict();
         if (prediction == lbl)
             correct++;
+        
+        printProgress(total, MAX_PIC);
     }
+    std::cout << std::endl;
 
     return 100.0 * correct / total;
 }
 
 int main(int argc, char* argv[]) {
     if (argc >= 2) HIDDEN_SIZE = std::stoi(argv[1]);
+    if (argc >= 3) NUM_HIDDEN_LAYERS = std::stoi(argv[2]);
 
     initializeNetworkStructure();
     std::cout << "Using HIDDEN_SIZE = " << HIDDEN_SIZE << std::endl;

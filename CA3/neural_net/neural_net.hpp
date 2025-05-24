@@ -21,7 +21,9 @@ struct Output_Node {
 };
 
 // Global layer containers
-extern std::vector<Hidden_Node> hidden_layer;
+extern int NUM_HIDDEN_LAYERS;
+extern std::vector<std::vector<Hidden_Node>> hidden_layers;
+
 extern std::vector<Output_Node> output_layer;
 
 // Loaders

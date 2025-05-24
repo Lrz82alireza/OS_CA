@@ -8,7 +8,9 @@ int INPUT_SIZE = 784;
 int HIDDEN_SIZE = 256;
 int OUTPUT_SIZE = 10;
 
-std::vector<Hidden_Node> hidden_layer(HIDDEN_SIZE);
+int NUM_HIDDEN_LAYERS = 1;
+std::vector<std::vector<Hidden_Node>> hidden_layers;
+
 std::vector<Output_Node> output_layer(OUTPUT_SIZE);
 
 void loadHiddenLayerParams(const std::string& weightsFile, const std::string& biasFile) {
@@ -20,14 +22,16 @@ void loadHiddenLayerParams(const std::string& weightsFile, const std::string& bi
         exit(1);
     }
 
-    for (int i = 0; i < HIDDEN_SIZE; ++i) {
-        for (int j = 0; j < INPUT_SIZE; ++j) {
-            wfile >> hidden_layer[i].weights[j];
+    for (int l = 0; l < NUM_HIDDEN_LAYERS; ++l) {
+        int input_size = (l == 0) ? INPUT_SIZE : HIDDEN_SIZE;
+        for (int i = 0; i < HIDDEN_SIZE; ++i) {
+            for (int j = 0; j < input_size; ++j) {
+                wfile >> hidden_layers[l][i].weights[j];
+            }
         }
-    }
-
-    for (int i = 0; i < HIDDEN_SIZE; ++i) {
-        bfile >> hidden_layer[i].bias;
+        for (int i = 0; i < HIDDEN_SIZE; ++i) {
+            bfile >> hidden_layers[l][i].bias;
+        }
     }
 }
 
@@ -74,14 +78,19 @@ int predict() {
 }
 
 void initializeNetworkStructure() {
-    hidden_layer.resize(HIDDEN_SIZE);
-    output_layer.resize(OUTPUT_SIZE);
-
-    for (auto& h : hidden_layer) {
-        h.weights.resize(INPUT_SIZE);
+    hidden_layers.clear();
+    for (int i = 0; i < NUM_HIDDEN_LAYERS; ++i) {
+        std::vector<Hidden_Node> layer(HIDDEN_SIZE);
+        int input_dim = (i == 0) ? INPUT_SIZE : HIDDEN_SIZE;
+        for (auto& h : layer) {
+            h.weights.resize(input_dim);
+        }
+        hidden_layers.push_back(layer);
     }
 
+    output_layer.resize(OUTPUT_SIZE);
     for (auto& o : output_layer) {
         o.weights.resize(HIDDEN_SIZE);
     }
 }
+

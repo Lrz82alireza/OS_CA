@@ -5,6 +5,8 @@
 #include "shared_queue.hpp"
 #include <utility>
 
+#define MAX_PIC 1000
+
 void reader_thread(SharedQueue<std::pair<MNIST_Image, MNIST_Label>>& q);
 
 #endif

@@ -7,10 +7,9 @@
 #include "barrier.hpp"
 #include <data_loader.hpp>
 
-void enqueue_hidden_jobs(
+void enqueue_all_hidden_layers(
     ThreadPool& pool,
     const MNIST_Image& img,
-    int total_neurons,
-    int neurons_per_task);
+    int neurons_per_job);
 
 #endif
